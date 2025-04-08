@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Spotify Popularity Analyzer</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+<!-- Welcome Screen -->
+<div id="welcome-screen">
+  <h1>Spotify Popularity Analyzer</h1>
+  <button id="start-button">Start</button>
+</div>
+
+<!-- App Interface -->
+<div id="app-interface" class="invisible">
+  <div class="menu-wrapper">
+    <button id="menu-toggle" class="menu-button">☰ Menu</button>
+    <div class="nav-links" id="navLinks">
+      <button onclick="showRawData()">Raw Data</button>
+      <button onclick="showSettings()">Settings</button>
+    </div>
+  </div>
+
+  <div class="main-container">
+    <!-- Left Panel -->
+    <div class="left-panel">
+      <!-- Search Block -->
+      <div class="panel-block">
+        <div class="top-bar">
+          <input type="text" id="artist-input" placeholder="Enter artist name..." />
+          <button id="search-button">Search</button>
+        </div>
+        <ul id="dropdown-results" class="dropdown hidden"></ul>
+      </div>
+
+      <!-- Artist Image Block -->
+      <div class="panel-block" id="artist-image-container">
+        <div class="panel-title">↓ Artist's Image ↓</div>
+        <!-- Image will be inserted here -->
+      </div>
+
+      <!-- Discography Block -->
+      <div class="panel-block">
+        <div class="panel-title">↓ Discography ↓</div>
+        <ul id="album-list" class="panel-content"></ul>
+      </div>
+    </div>
+
+    <!-- Right Panel -->
+    <div class="right-panel">
+      <div class="chart-block">
+        <h3>Album Popularity</h3>
+        <div id="album-chart"></div>
+      </div>
+
+      <div class="chart-block">
+        <h3>Tracks</h3>
+        <div id="track-chart"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="loader">Loading discography, please hold on...</div>
+</div>
+
+<!-- Raw Data Screen -->
+<div id="raw-data-screen" class="invisible screen">
+  <button class="back-button" onclick="goBack()">← Back</button>
+  <div class="panel-block raw-data-block">
+    <div class="panel-title">Raw Data Viewer</div>
+    <pre id="raw-data-text"></pre>
+  </div>
+</div>
+
+<!-- Settings Screen -->
+<div id="settings-screen" class="invisible screen">
+  <button class="back-button" onclick="closeSettings()">← Back</button>
+  <div class="panel-block settings-block">
+    <div class="panel-title">Settings</div>
+    <!-- Settings Content -->
+    <div class="settings-content">
+      <h3>To Look For</h3>
+      <label><input type="checkbox" class="look-for" value="album" checked> Album</label>
+      <label><input type="checkbox" class="look-for" value="single" checked> Single</label>
+      <label><input type="checkbox" class="look-for" value="compilation" checked> Compilation</label>
+      <hr>
+      <h3>To Filter Out</h3>
+      <label>
+        <input type="checkbox" id="select-all-filters"> Select All
+      </label>
+      <div class="filter-options">
+        <label><input type="checkbox" class="filter-key" value="demo"> Demo</label>
+        <label><input type="checkbox" class="filter-key" value="live"> Live</label>
+        <label><input type="checkbox" class="filter-key" value="remastered"> Remastered</label>
+        <label><input type="checkbox" class="filter-key" value="edition"> Edition</label>
+        <label><input type="checkbox" class="filter-key" value="deluxe"> Deluxe</label>
+        <label><input type="checkbox" class="filter-key" value="reissue"> Reissue</label>
+        <label><input type="checkbox" class="filter-key" value="remix"> Remix</label>
+        <label><input type="checkbox" class="filter-key" value="edit"> Edit</label>
+        <label><input type="checkbox" class="filter-key" value="feat"> Feat</label>
+        <label><input type="checkbox" class="filter-key" value="instrumental"> Instrumental</label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>© 2025 Alexey Voronin</footer>
+
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script src="/static/script.js"></script>
+</body>
+</html>

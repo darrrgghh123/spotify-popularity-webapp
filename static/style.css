@@ -1,0 +1,425 @@
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(-45deg, #1DB954, #121212, #191414, #1ED760);
+  background-size: 400% 400%;
+  animation: gradient 10s ease infinite;
+  color: white;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+@keyframes gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* === Welcome Screen === */
+#welcome-screen {
+  height: 100vh;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  transition: all 1.2s ease;
+  padding-top: 80px;
+
+}
+
+#welcome-screen h1 {
+  font-size: 3em;
+  margin: 0 0 20px 0;
+  margin-bottom: -5 px;
+}
+
+#start-button {
+  font-size: 1.5em;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 12px;
+  background-color: #1DB954;
+  color: black;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+#start-button:hover {
+  transform: scale(1.1);
+}
+
+/* === Toggle Screens === */
+.fade-out {
+  opacity: 0;
+  transform: scale(0.95);
+  transition: all 1.2s ease;
+  pointer-events: none;
+}
+.invisible {
+  opacity: 0;
+  pointer-events: none;
+}
+.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transition: all 1.2s ease;
+}
+
+/* === Main Interface === */
+#app-interface {
+  flex: 1;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding-top: 100px;
+  transition: opacity 1.2s ease;
+}
+
+/* === Menu === */
+.menu-wrapper {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+}
+
+.menu-button {
+  background-color: #1DB954;
+  color: black;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.nav-links {
+  display: none;
+  flex-direction: column;
+  background: rgba(0, 0, 0, 0.85);
+  border: 1px solid #ffffff55;
+  padding: 10px;
+  border-radius: 10px;
+  margin-top: 10px;
+  min-width: 180px;
+  position: absolute;
+  z-index: 1000;
+}
+
+.nav-links button {
+  background-color: #1DB954;
+  color: black;
+  border: none;
+  padding: 10px 16px;
+  margin: 4px 0;
+  border-radius: 6px;
+  font-size: 0.95em;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* === Grid Layout === */
+.main-container {
+  display: flex;
+  gap: 20px;
+  max-width: 1200px;
+  width: 100%;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* === Left Panel === */
+.left-panel {
+  flex: 1;
+  min-width: 300px;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.top-bar {
+  display: flex;
+  gap: 10px;
+}
+
+input[type=text] {
+  padding: 10px;
+  font-size: 1em;
+  width: 100%;
+  border-radius: 8px;
+  border: none;
+}
+
+button {
+  padding: 10px 16px;
+  font-size: 1em;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  background-color: #1DB954;
+  color: black;
+}
+
+.panel-block {
+  background-color: rgba(0,0,0,0.25);
+  border-radius: 10px;
+  padding: 15px;
+}
+
+.panel-title {
+  font-weight: bold;
+  margin-bottom: 8px;
+  font-size: 1.1em;
+}
+
+/* === Artist Image Block === */
+.artist-section {
+  display: flex;
+  gap: 15px;
+  align-items: flex-start;
+  margin-top: 10px;
+}
+
+#artist-image-container img {
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  margin-bottom: 15px;
+}
+
+/* === Dropdown Results (Search) === */
+.dropdown {
+  position: absolute;
+  z-index: 999;
+  background: rgba(0, 0, 0, 0.8);
+  width: 100%;
+  max-height: 200px;
+  overflow-y: auto;
+  margin-top: 8px;
+  border-radius: 8px;
+  border: 1px solid #ffffff33;
+  transition: opacity 0.3s ease;
+}
+
+.dropdown li {
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  font-size: 0.95em;
+}
+
+.dropdown li:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.hidden {
+  display: none;
+}
+
+/* === List Items === */
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+li {
+  margin: 2px 0;
+  padding: 4px 8px;
+  cursor: pointer;
+  user-select: none;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+  line-height: 1.2em;
+  font-size: 0.95em;
+}
+
+li:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+li.selected {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* === Right Panel === */
+.right-panel {
+  flex: 2;
+  min-width: 400px;
+  max-width: 700px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.chart-block {
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: 20px;
+  border-radius: 12px;
+}
+
+/* === Spinner (Fixed Top) === */
+#loader {
+  display: none;
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.85);
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: bold;
+  color: #fff;
+  z-index: 2000;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.3; }
+  50% { opacity: 1; }
+  100% { opacity: 0.3; }
+}
+
+/* === Footer === */
+footer {
+  text-align: center;
+  padding: 20px;
+  font-size: 0.85em;
+  color: white;
+  margin-top: auto;
+}
+
+/* === Mobile View === */
+@media (max-width: 768px) {
+  .main-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .left-panel, .right-panel {
+    max-width: 100%;
+  }
+
+  .artist-section {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  #artist-image-container img {
+    width: 100%;
+  }
+}
+
+/* === RAW DATA SCREEN (обновлённый) === */
+#raw-data-screen {
+  width: 100%;
+  padding: 60px 20px;
+  display: none; /* изначально скрыт */
+  flex-direction: column;
+  align-items: center;
+  /* background-color: rgba(0, 0, 0, 0.85);  затемнение фона */
+  transition: opacity 1.2s ease;
+  /* можно добавить min-height, чтобы блок занимал весь экран выше футера, например:
+     min-height: calc(100vh - 100px); */
+}
+
+/* Стили для управления прозрачностью через классы */
+#raw-data-screen.invisible {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#raw-data-screen.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.back-button {
+  background-color: #1DB954;
+  color: black;
+  padding: 8px 18px;
+  border: none;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 1em;
+  cursor: pointer;
+}
+
+.raw-data-block {
+  background-color: rgba(0, 0, 0, 0.25);
+  border-radius: 10px;
+  padding: 20px;
+  width: 100%;
+  max-width: 900px;
+}
+
+#raw-data-text {
+  white-space: pre-wrap;
+  font-family: 'Courier New', monospace;
+  font-size: 0.95em;
+  color: white;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+/* Settings Screen – по аналогии с Raw Data Screen */
+#settings-screen {
+  width: 100%;
+  padding: 60px 20px;
+  display: none; /* изначально скрыт */
+  flex-direction: column;
+  align-items: center;
+  transition: opacity 1.2s ease;
+  /* Для равномерного распределения пространства можно добавить flex: 1; если нужно */
+  flex: 1;
+}
+
+/* Управление прозрачностью через классы */
+#settings-screen.invisible {
+  opacity: 0;
+  pointer-events: none;
+}
+#settings-screen.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Стили для settings-block (подкладка) */
+.settings-block {
+  background-color: rgba(0, 0, 0, 0.25); /* как у panel-block */
+  border-radius: 10px;
+  padding: 30px; /* чуть больше, чем у обычного panel-block */
+  width: 100%;
+  max-width: 1000px; /* немного больше, чем 900px */
+  margin-bottom: 20px;
+}
+
+/* Стили для контента настроек */
+.settings-content h3 {
+  margin-top: 0;
+  font-size: 1.2em;
+}
+.settings-content label {
+  display: inline-block;
+  margin-right: 15px;
+  font-size: 1em;
+  cursor: pointer;
+}
+.filter-options {
+  margin-top: 10px;
+}
+.filter-options label {
+  display: inline-block;
+  margin-right: 10px;
+  margin-bottom: 5px;
+  font-size: 0.95em;
+}
