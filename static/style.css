@@ -5,16 +5,16 @@
 html, body {
   margin: 0;
   padding: 0;
+  height: 100vh;
+  overflow-y: hidden;
   font-family: 'Segoe UI', sans-serif;
   background: linear-gradient(-45deg, #1DB954, #121212, #191414, #1ED760);
   background-size: 400% 400%;
   animation: gradient 10s ease infinite;
   color: white;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
   overflow-x: hidden;
 }
+
 
 @keyframes gradient {
   0% { background-position: 0% 50%; }
@@ -25,21 +25,23 @@ html, body {
 /* === Welcome Screen === */
 #welcome-screen {
   height: 100vh;
-  flex: 1;
+  max-height: 100vh;
   display: flex;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
+  flex-direction: column;
   text-align: center;
+  padding: 0;
+  margin: 0;
   transition: all 1.2s ease;
-  padding-top: 80px;
-
+  overflow: hidden;
 }
+
 
 #welcome-screen h1 {
   font-size: 3em;
   margin: 0 0 20px 0;
-  margin-bottom: -5 px;
+  margin-bottom: 0px;
 }
 
 #start-button {
@@ -168,8 +170,12 @@ button {
   cursor: pointer;
   background-color: #1DB954;
   color: black;
-}
+    transition: transform 0.3s ease;
 
+}
+button:hover {
+  transform: scale(0.92);
+}
 .panel-block {
   background-color: rgba(0,0,0,0.25);
   border-radius: 10px;
@@ -193,23 +199,40 @@ button {
 #artist-image-container img {
   width: 100%;
   height: auto;
+  max-height: 400px;
+    display: block;
+
+  object-fit: contain;
   border-radius: 10px;
-  margin-bottom: 15px;
 }
 
+/* === Новый блок для меню, чтобы сдвинуть ссылки вправо === */
+.menu-links-container {
+  margin-left: 50px;
+
+  display: flex;
+  gap:8px;
+}
 /* === Dropdown Results (Search) === */
 .dropdown {
   position: absolute;
   z-index: 999;
   background: rgba(0, 0, 0, 0.8);
-  width: 100%;
+  width: 240px; /* фиксированная ширина */
   max-height: 200px;
   overflow-y: auto;
   margin-top: 8px;
   border-radius: 8px;
   border: 1px solid #ffffff33;
   transition: opacity 0.3s ease;
+  /* Скрытие скроллбара для Firefox и IE */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
+.dropdown::-webkit-scrollbar {
+  display: none;  /* для Chrome, Safari и Opera */
+}
+
 
 .dropdown li {
   padding: 8px 12px;
@@ -271,9 +294,9 @@ li.selected {
 #loader {
   display: none;
   position: fixed;
-  top: 10px;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%); /* Отцентрирует элемент по обеим осям */
   background: rgba(0, 0, 0, 0.85);
   padding: 10px 20px;
   border-radius: 10px;
@@ -289,14 +312,32 @@ li.selected {
   100% { opacity: 0.3; }
 }
 
+
 /* === Footer === */
 footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
   text-align: center;
   padding: 20px;
   font-size: 0.85em;
   color: white;
-  margin-top: auto;
+  z-index: 998;
+  background: rgba(0, 0, 0, 0.2);
+  margin: 0;
+  box-sizing: border-box;
+    display: none; /* футер скрыт до завершения анимации приветствия */
 }
+
+.footer-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+
 
 /* === Mobile View === */
 @media (max-width: 768px) {
@@ -330,6 +371,7 @@ footer {
   transition: opacity 1.2s ease;
   /* можно добавить min-height, чтобы блок занимал весь экран выше футера, например:
      min-height: calc(100vh - 100px); */
+     margin-top: 50px;
 }
 
 /* Стили для управления прозрачностью через классы */
@@ -381,6 +423,7 @@ footer {
   transition: opacity 1.2s ease;
   /* Для равномерного распределения пространства можно добавить flex: 1; если нужно */
   flex: 1;
+  margin-top: 50px;
 }
 
 /* Управление прозрачностью через классы */
@@ -422,4 +465,104 @@ footer {
   margin-right: 10px;
   margin-bottom: 5px;
   font-size: 0.95em;
+}
+/* Новый вид панели меню */
+#menu-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  /* Центрируем содержимое по горизонтали */
+  justify-content: center;
+  align-items: center;
+  padding: 8px 16px; /* уменьшенные отступы для компактности */
+  background: transparent;
+  z-index: 999;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  gap: 8px;  /* расстояние между элементами */
+}
+.search-wrapper {
+  position: relative;  /* ключевая строчка! */
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.search-wrapper input {
+  margin-right: 10px;
+}
+#dropdown-results {
+  position: absolute;
+  top: 110%;
+  left: 0;
+  width: 220px;
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid #ffffff22;
+  border-radius: 8px;
+  z-index: 1000;
+}
+#menu-bar img {
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  border-radius: 6px;
+   margin-right: 10px;
+}
+
+#menu-bar input {
+  padding: 6px 10px;
+  font-size: 1em;
+  border-radius: 6px;
+  border: none;
+  width: 200px;
+  max-width: 240px;
+}
+
+#menu-bar button {
+  padding: 8px 12px;
+  font-size: 0.95em;
+  border-radius: 6px;
+  background-color: #1DB954;
+  border: none;
+  color: black;
+  cursor: pointer;
+}
+
+/* Серые ссылки */
+.menu-link {
+  color: #aaa;
+  font-size: 0.95em;
+  cursor: pointer;
+  text-decoration: none;
+  border: none;
+  background: none;}
+.menu-link:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
+/* Выравнивание блоков */
+.panel-block,
+.chart-block {
+ min-height: 300px; /* или сколько тебе визуально нравится */
+  width: 100%;
+  background-color: rgba(0,0,0,0.25);
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+#album-chart,
+#track-chart {
+  width: 100%;
+  max-height: 500px;
+  overflow-x: auto;
+}
+#album-list {
+  max-height: 100%;
+  overflow-y: auto;
+}
+#discography-container {
+  max-height: 500px;
+  overflow-y: auto;
 }

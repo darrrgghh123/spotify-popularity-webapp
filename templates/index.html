@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Spotify Popularity Analyzer</title>
   <link rel="stylesheet" href="/static/style.css" />
+  <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
 </head>
 <body>
 
@@ -14,38 +15,40 @@
   <button id="start-button">Start</button>
 </div>
 
+<!-- Fixed Menu Bar -->
+<div id="menu-bar" class="invisible">
+  <img src="/static/favicon.ico" alt="Logo" id="logo-link" onclick="goToMain()" />
+
+  <div class="search-wrapper">
+    <input type="text" id="artist-input-top" placeholder="Enter artist name..." />
+    <button id="search-button-top">Search</button>
+    <ul id="dropdown-results" class="dropdown hidden"></ul>
+  </div>
+
+  <!-- Обернули ссылки в отдельный контейнер -->
+  <div class="menu-links-container">
+    <span class="menu-link" onclick="showRawData()">Raw Data</span>
+    <span class="menu-link" onclick="showSettings()">Settings</span>
+    <span class="menu-link" onclick="window.open('https://extreme-vocal-techniques-db.onrender.com', '_blank')"><i>EMVT Database</i></span>
+  </div>
+</div>
+
+
 <!-- App Interface -->
 <div id="app-interface" class="invisible">
-  <div class="menu-wrapper">
-    <button id="menu-toggle" class="menu-button">☰ Menu</button>
-    <div class="nav-links" id="navLinks">
-      <button onclick="showRawData()">Raw Data</button>
-      <button onclick="showSettings()">Settings</button>
-      <button onclick="window.open('https://extreme-vocal-techniques-db.onrender.com', '_blank', 'noopener,noreferrer')">EMVT Database</button>
-    </div>
-  </div>
 
   <div class="main-container">
     <!-- Left Panel -->
     <div class="left-panel">
-      <!-- Search Block -->
-      <div class="panel-block">
-        <div class="top-bar">
-          <input type="text" id="artist-input" placeholder="Enter artist name..." />
-          <button id="search-button">Search</button>
-        </div>
-        <ul id="dropdown-results" class="dropdown hidden"></ul>
-      </div>
-
       <!-- Artist Image Block -->
       <div class="panel-block" id="artist-image-container">
-        <div class="panel-title">↓ Artist's Image ↓</div>
+        <div class="panel-title">Artist's Image</div>
         <!-- Image will be inserted here -->
       </div>
 
       <!-- Discography Block -->
       <div class="panel-block">
-        <div class="panel-title">↓ Discography ↓</div>
+        <div class="panel-title">Discography</div>
         <ul id="album-list" class="panel-content"></ul>
       </div>
     </div>
@@ -69,7 +72,6 @@
 
 <!-- Raw Data Screen -->
 <div id="raw-data-screen" class="invisible screen">
-  <button class="back-button" onclick="goBack()">← Back</button>
   <div class="panel-block raw-data-block">
     <div class="panel-title">Raw Data Viewer</div>
     <pre id="raw-data-text"></pre>
@@ -78,9 +80,7 @@
 
 <!-- Settings Screen -->
 <div id="settings-screen" class="invisible screen">
-  <button class="back-button" onclick="closeSettings()">← Back</button>
   <div class="panel-block settings-block">
-    <div class="panel-title">Settings</div>
     <!-- Settings Content -->
     <div class="settings-content">
       <h3>To Look For</h3>
@@ -108,7 +108,9 @@
   </div>
 </div>
 
-<footer>© 2025 Alexey Voronin</footer>
+<footer>
+  <div class="footer-container">© 2025 Alexey Voronin</div>
+</footer>
 
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 <script src="/static/script.js"></script>

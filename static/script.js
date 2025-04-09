@@ -1,64 +1,114 @@
   // Если глобальный объект settings ещё не создан, создаём его
-  window.settings = window.settings || {
-    types: ["album", "single", "compilation"],
-    filters: []
-  };
+window.settings = window.settings || {
+  types: ["album", "single", "compilation"],
+  filters: []
+};
+
 document.addEventListener("DOMContentLoaded", () => {
   // Объявляем элементы, доступные после загрузки DOM
   const startButton = document.getElementById("start-button");
   const welcomeScreen = document.getElementById("welcome-screen");
   const appInterface = document.getElementById("app-interface");
-  const searchBtn = document.getElementById("search-button");
-  const artistInput = document.getElementById("artist-input");
-  const selectAll = document.getElementById("select-all-filters");
-  const filterCheckboxes = document.querySelectorAll(".filter-key");
+  const searchBtnTop = document.getElementById("search-button-top");
+  const artistInputTop = document.getElementById("artist-input-top");
+    const menuBar = document.getElementById("menu-bar");         // ДОБАВЛЕНО
+  const footer = document.querySelector("footer");
+  // (Если нужен "search-button", добавьте его обработчик только если такой элемент есть)
+  // const searchBtn = document.getElementById("search-button");
 
-  // Если элемент "Select All" существует, вешаем слушатель
-  if (selectAll) {
-    selectAll.addEventListener("change", function() {
-      filterCheckboxes.forEach(cb => {
-        cb.checked = this.checked;
-      });
-      updateFilterSettings();
-    });
-  }
+  // Обработчики для чекбоксов "To Filter Out"
+const filterCheckboxes = document.querySelectorAll(".filter-key");
+const selectAll = document.getElementById("select-all-filters");
 
-  // Обработчики для чекбоксов "To Look For"
-  const lookForCheckboxes = document.querySelectorAll(".look-for");
-  lookForCheckboxes.forEach(cb => {
-    cb.addEventListener("change", function() {
-      updateLookForSettings();
-    });
+// При изменении любого чекбокса в группе "To Filter Out"
+filterCheckboxes.forEach(cb => {
+  cb.addEventListener("change", function() {
+    updateFilterSettings();
+    applySettings();
+    // Если все чекбоксы "filter-key" отмечены, то selectAll становится активным, иначе - снимается
+    const allChecked = Array.from(filterCheckboxes).every(chk => chk.checked);
+    if (selectAll) {
+      selectAll.checked = allChecked;
+    }
   });
+});
 
+// Обработчик для чекбокса "Select All"
+if (selectAll) {
+  selectAll.addEventListener("change", function() {
+    // При изменении selectAll задаём всем чекбоксам состояние, соответствующее selectAll
+    filterCheckboxes.forEach(cb => {
+      cb.checked = this.checked;
+    });
+    updateFilterSettings();
+    applySettings();
+  });
+}
 
+// Обработчики для чекбоксов "To Look For"
+const lookForCheckboxes = document.querySelectorAll(".look-for");
+lookForCheckboxes.forEach(cb => {
+  cb.addEventListener("change", function() {
+    updateLookForSettings();
+    applySettings(); // применяем фильтр сразу
+  });
+});
 
   // Слушатель для кнопки Start
   startButton.addEventListener("click", () => {
-    welcomeScreen.classList.add("fade-out");
-    setTimeout(() => {
-      welcomeScreen.style.display = "none";
-      appInterface.classList.remove("invisible");
-      appInterface.classList.add("visible");
-    }, 1200);
-  });
+  console.log("Кнопка Start нажата");
+  welcomeScreen.classList.add("fade-out");
+  setTimeout(() => {
+    // Скрываем экран приветствия
+    welcomeScreen.style.display = "none";
 
-  // Слушатели для поиска
-  searchBtn.addEventListener("click", searchArtist);
-  artistInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") searchArtist();
+    // Показываем основной интерфейс
+    appInterface.classList.remove("invisible");
+    appInterface.classList.add("visible");
+
+    // Показываем панель меню
+    menuBar.classList.remove("invisible");
+    menuBar.classList.add("visible");
+
+    // Отображаем футер (если нужен)
+    footer.style.display = "block";
+    // Возвращаем прокрутку после исчезновения приветственного экрана
+    document.body.style.overflow = "auto";
+  }, 1200);
+});
+
+
+  // Слушатели для поиска (уже есть элемент search-button-top)
+  searchBtnTop.addEventListener("click", () => {
+    searchArtist();
+  });
+  artistInputTop.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      searchArtist();
+    }
   });
 
   // Слушатель для меню
   document.addEventListener("click", (e) => {
     const toggleBtn = document.getElementById("menu-toggle");
     const menu = document.getElementById("navLinks");
+    if (!toggleBtn || !menu) return;
     if (toggleBtn.contains(e.target)) {
-      menu.style.display = menu.style.display === "flex" ? "none" : "flex";
+      menu.classList.toggle("active");
     } else if (!menu.contains(e.target)) {
-      menu.style.display = "none";
+      menu.classList.remove("active");
     }
   });
+});
+
+// Скрытие выпадающего списка, если клик вне области поиска
+document.addEventListener("click", (e) => {
+  const searchWrapper = document.querySelector(".search-wrapper");
+  const dropdown = document.getElementById("dropdown-results");
+  // Если клик не в области поиска, скрываем список
+  if (searchWrapper && !searchWrapper.contains(e.target)) {
+    dropdown.classList.add("hidden");
+  }
 });
 
 // Функции для обновления настроек
@@ -94,11 +144,11 @@ let discographyData = null;
 let selectedAlbum = null;
 
 async function searchArtist() {
-  const input = document.getElementById("artist-input").value.trim();
+  const input = document.getElementById("artist-input-top").value.trim();
   const dropdown = document.getElementById("dropdown-results");
   const imgContainer = document.getElementById("artist-image-container");
 
-  imgContainer.innerHTML = '<div class="panel-title">↓ Artist\'s Image ↓</div>';
+  imgContainer.innerHTML = '<div class="panel-title">Artist\'s Image</div>';
 
   if (!input) {
     dropdown.classList.add("hidden");
@@ -116,29 +166,33 @@ async function searchArtist() {
   artistImages = {};
 
   data.results.forEach((artist) => {
-    artistImages[artist.id] = artist.image || null;
+  artistImages[artist.id] = artist.image || null;
 
-    const li = document.createElement("li");
-    li.textContent = `${artist.name} (${artist.id})`;
-    li.dataset.id = artist.id;
+  const li = document.createElement("li");
+  li.textContent = artist.name; // ID удалён из отображаемого текста
+  li.dataset.id = artist.id;
 
-    li.addEventListener("click", () => {
-      selectedArtistId = artist.id;
-      selectedArtistName = artist.name;
-      updateArtistImage(artist.id);
-      dropdown.classList.add("hidden");
-      loadDiscography(artist.id);
-    });
-
-    dropdown.appendChild(li);
+  li.addEventListener("click", () => {
+    selectedArtistId = artist.id;
+    selectedArtistName = artist.name;
+    updateArtistImage(artist.id);
+    dropdown.classList.add("hidden");
+    // Сбрасываем настройки к значениям по умолчанию при выборе нового исполнителя
+    resetSettingsToDefault();
+    loadDiscography(artist.id);
   });
+
+  dropdown.appendChild(li);
+});
+
 
   dropdown.classList.remove("hidden");
 }
 
+
 function updateArtistImage(artistId) {
   const imgContainer = document.getElementById("artist-image-container");
-  imgContainer.innerHTML = '<div class="panel-title">↓ Artist\'s Image ↓</div>';
+  imgContainer.innerHTML = '<div class="panel-title">Artist\'s Image</div>';
 
   const imageUrl = artistImages[artistId];
   if (imageUrl) {
@@ -185,9 +239,32 @@ async function loadDiscography(artist_id) {
 }
 
 function drawAlbumChart(albums) {
+  // Сортируем по убыванию популярности (наибольшая популярность первой)
   const sorted = albums.slice().sort((a, b) => b.popularity - a.popularity);
+  // Формируем массив названий альбомов; при горизонтальном графике,
+  // чтобы самый популярный был сверху, оставляем сортировку,
+  // но далее задаем yaxis.autorange: "reversed"
   const names = sorted.map(a => `${a.name} (${a.release_year})`);
   const pops = sorted.map(a => a.popularity);
+
+  // Тема графика для тёмного оформления, с чуть более светлым фоном:
+  const darkTheme = {
+    // Измените здесь для светлого фона графика
+    paper_bgcolor: "#222222", // Фон всей области графика
+    plot_bgcolor: "#222222",  // Фон области рисования графика
+    font: { color: "#FFFFFF" },
+    xaxis: {
+      gridcolor: "#333333", // Цвет линий сетки по оси x
+      tickfont: { color: "#FFFFFF", size: 12 },
+      title: { text: "Popularity", font: { color: "#FFFFFF", size: 12 } }
+    },
+    yaxis: {
+      gridcolor: "#333333", // Цвет линий сетки по оси y
+      tickfont: { color: "#FFFFFF", size: 12 },
+      autorange: "reversed" // Обеспечивает, что самый популярный элемент окажется сверху
+    },
+    margin: { t: 50, l: 300 }
+  };
 
   Plotly.newPlot("album-chart", [{
     type: "bar",
@@ -195,25 +272,37 @@ function drawAlbumChart(albums) {
     y: names,
     orientation: "h",
     marker: { color: "#1DB954" }
-  }], {
-    title: selectedArtistName ? `Album Popularity — ${selectedArtistName}` : "Album Popularity",
-    margin: { t: 50, l: 300 },
-    yaxis: {
-      automargin: true,
-      autorange: "reversed",
-      tickfont: { size: 12 }
-    },
-    xaxis: {
-      title: "Popularity",
-      tickfont: { size: 12 }
-    }
-  }, { responsive: true });
+  }], Object.assign({
+    title: selectedArtistName ? `Album Popularity — ${selectedArtistName}` : "Album Popularity"
+  }, darkTheme), { responsive: true });
 }
 
+
+
 function drawTrackChart(album) {
+  // Сортируем треки по убыванию популярности
   const tracks = album.tracks.slice().sort((a, b) => b.popularity - a.popularity);
   const names = tracks.map(t => t.name);
   const pops = tracks.map(t => t.popularity);
+
+  // Тема графика, аналогичная предыдущей, для тёмного оформления:
+  const darkTheme = {
+    // Измените здесь фон (фон графика чуть светлее)
+    paper_bgcolor: "#222222", // Фон всей области графика
+    plot_bgcolor: "#222222",  // Фон области рисования графика
+    font: { color: "#FFFFFF" },
+    xaxis: {
+      gridcolor: "#333333",
+      tickfont: { color: "#FFFFFF", size: 12 },
+      title: { text: "Popularity", font: { color: "#FFFFFF", size: 12 } }
+    },
+    yaxis: {
+      gridcolor: "#333333",
+      tickfont: { color: "#FFFFFF", size: 12 },
+      autorange: "reversed" // Обеспечивает, что самый популярный трек окажется сверху
+    },
+    margin: { t: 50, l: 300 }
+  };
 
   Plotly.newPlot("track-chart", [{
     type: "bar",
@@ -221,20 +310,11 @@ function drawTrackChart(album) {
     y: names,
     orientation: "h",
     marker: { color: "orange" }
-  }], {
-    title: `Tracks in ${album.name}`,
-    margin: { t: 50, l: 300 },
-    yaxis: {
-      automargin: true,
-      autorange: "reversed",
-      tickfont: { size: 12 }
-    },
-    xaxis: {
-      title: "Popularity",
-      tickfont: { size: 12 }
-    }
-  }, { responsive: true });
+  }], Object.assign({
+    title: `Tracks in ${album.name}`
+  }, darkTheme), { responsive: true });
 }
+
 
 function showLoading(show) {
   const spinner = document.getElementById("loader");
@@ -299,25 +379,32 @@ function formatRawData() {
 /* Обновляем функцию showRawData, чтобы выводить отформатированный текст */
 function showRawData() {
   const rawDataScreen = document.getElementById("raw-data-screen");
+  const settingsScreen = document.getElementById("settings-screen");
   const appInterface = document.getElementById("app-interface");
 
-  // Плавное затухание главного интерфейса
+  // Скрываем экран настроек, если он виден
+  if (settingsScreen.style.display !== "none") {
+    settingsScreen.classList.remove("visible");
+    settingsScreen.classList.add("invisible");
+    setTimeout(() => {
+      settingsScreen.style.display = "none";
+    }, 1200);
+  }
+
   appInterface.classList.remove("visible");
   appInterface.classList.add("invisible");
 
   setTimeout(() => {
     appInterface.style.display = "none";
-
     rawDataScreen.style.display = "flex";
-    // Принудительный reflow для корректного применения transition
     void rawDataScreen.offsetWidth;
     rawDataScreen.classList.remove("invisible");
     rawDataScreen.classList.add("visible");
 
-    // Заполняем Raw Data отформатированным текстом
+    // Заполнение Raw Data текстом
     const rawText = document.getElementById("raw-data-text");
     rawText.textContent = formatRawData();
-  }, 1200); // время анимации
+  }, 1200);
 }
 
 function goBack() {
@@ -342,21 +429,30 @@ function goBack() {
 
 function showSettings() {
   const settingsScreen = document.getElementById("settings-screen");
+  const rawDataScreen = document.getElementById("raw-data-screen");
   const appInterface = document.getElementById("app-interface");
 
-  // Плавно затухаем главный интерфейс
+  // Скрываем экран Raw Data, если он виден
+  if (rawDataScreen.style.display !== "none") {
+    rawDataScreen.classList.remove("visible");
+    rawDataScreen.classList.add("invisible");
+    setTimeout(() => {
+      rawDataScreen.style.display = "none";
+    }, 1200);
+  }
+
   appInterface.classList.remove("visible");
   appInterface.classList.add("invisible");
 
   setTimeout(() => {
     appInterface.style.display = "none";
     settingsScreen.style.display = "flex";
-    // Принудительный reflow для применения transition
     void settingsScreen.offsetWidth;
     settingsScreen.classList.remove("invisible");
     settingsScreen.classList.add("visible");
   }, 1200);
 }
+
 
 function closeSettings() {
   const settingsScreen = document.getElementById("settings-screen");
@@ -436,4 +532,52 @@ function closeSettings() {
     // Применяем настройки: обновляем отображение дискографии и график
     applySettings();
   }, 1200);
+}
+function goToMain() {
+  const raw = document.getElementById("raw-data-screen");
+  const settings = document.getElementById("settings-screen");
+  const app = document.getElementById("app-interface");
+
+  // Если какой-либо из экранов открыт, плавно скрываем его
+  [raw, settings].forEach(screen => {
+    if (screen.style.display !== "none") {
+      screen.classList.remove("visible");
+      screen.classList.add("invisible");
+      setTimeout(() => {
+        screen.style.display = "none";
+      }, 1200);
+    }
+  });
+
+  // После завершения анимации показываем главный интерфейс
+  setTimeout(() => {
+    app.style.display = "flex";
+    void app.offsetWidth;
+    app.classList.remove("invisible");
+    app.classList.add("visible");
+  }, 1200);
+}
+// Функция сброса настроек к значениям по умолчанию
+function resetSettingsToDefault() {
+  // Сброс объекта настроек
+  window.settings.types = ["album", "single", "compilation"];
+  window.settings.filters = [];
+
+  // Сброс чекбоксов "To Look For" (по умолчанию все включены)
+  const lookForCheckboxes = document.querySelectorAll(".look-for");
+  lookForCheckboxes.forEach(cb => {
+    cb.checked = true;
+  });
+
+  // Сброс чекбоксов "To Filter Out" (по умолчанию ни один не выбран)
+  const filterCheckboxes = document.querySelectorAll(".filter-key");
+  filterCheckboxes.forEach(cb => {
+    cb.checked = false;
+  });
+
+  // Сбрасываем чекбокс "Select All"
+  const selectAll = document.getElementById("select-all-filters");
+  if (selectAll) {
+    selectAll.checked = false;
+  }
 }

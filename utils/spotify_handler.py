@@ -18,7 +18,7 @@ sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(
 ))
 
 def get_artist_matches(artist_name):
-    results = sp.search(q=artist_name, type='artist', limit=5)
+    results = sp.search(q=artist_name, type='artist', limit=15)
     items = results.get("artists", {}).get("items", [])
     return {
         "results": [
