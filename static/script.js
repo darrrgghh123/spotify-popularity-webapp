@@ -78,15 +78,7 @@ lookForCheckboxes.forEach(cb => {
 });
 
 
-  // Слушатели для поиска (уже есть элемент search-button-top)
-  searchBtnTop.addEventListener("click", () => {
-    searchArtist();
-  });
-  artistInputTop.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      searchArtist();
-    }
-  });
+
 
   // Слушатель для меню
   document.addEventListener("click", (e) => {
@@ -618,3 +610,142 @@ function resetSettingsToDefault() {
     selectAll.checked = false;
   }
 }
+
+// Функция дебаунса
+function debounce(func, delay) {
+  let timeout;
+  return function(...args) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => { func.apply(this, args); }, delay);
+  };
+}
+
+// Глобальная переменная для отслеживания выделенного индекса в выпадающем списке
+let dropdownSelectedIndex = -1;
+
+// Функция обновления выделения в списке
+function updateDropdownSelection() {
+  const dropdown = document.getElementById("dropdown-results");
+  const items = dropdown.getElementsByTagName("li");
+  for (let i = 0; i < items.length; i++) {
+    if (i === dropdownSelectedIndex) {
+      items[i].classList.add("selected");
+    } else {
+      items[i].classList.remove("selected");
+    }
+  }
+}
+
+// Функция обработки динамического поиска
+async function doDynamicSearch() {
+  const inputEl = document.getElementById("artist-input-top");
+  const query = inputEl.value.trim();
+  const dropdown = document.getElementById("dropdown-results");
+
+  // Если меньше двух символов – скрываем результаты
+  if (query.length < 2) {
+    dropdown.classList.add("hidden");
+    dropdown.innerHTML = "";
+    dropdownSelectedIndex = -1;
+    return;
+  }
+
+  // Выполняем AJAX-запрос к API поиска
+  const res = await fetch("/search_artist", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ artist: query })
+  });
+  const data = await res.json();
+
+  // Фильтруем результаты
+  let results = data.results.filter(artist => {
+    return artist.name.toLowerCase().includes(query.toLowerCase());
+  });
+
+  // Сортируем результаты (опционально)
+  results.sort((a, b) => {
+    return a.name.toLowerCase().indexOf(query.toLowerCase()) - b.name.toLowerCase().indexOf(query.toLowerCase());
+  });
+
+  // Обновляем выпадающий список и сохраняем URL изображений
+  dropdown.innerHTML = "";
+  results.forEach((artist) => {
+    // Заполняем глобальный объект artistImages:
+    artistImages[artist.id] = artist.image || null;
+
+    const li = document.createElement("li");
+    li.textContent = artist.name;
+    li.dataset.id = artist.id;
+    li.addEventListener("click", () => {
+      selectArtist(artist);
+    });
+    dropdown.appendChild(li);
+  });
+  dropdown.classList.remove("hidden");
+
+  // Сбрасываем выделение
+  dropdownSelectedIndex = -1;
+}
+
+
+// Обёрнутая функция с дебаунсом (300 мс задержка)
+const dynamicSearch = debounce(doDynamicSearch, 300);
+
+// Навешиваем обработчик события input на поле поиска
+document.getElementById("artist-input-top").addEventListener("input", dynamicSearch);
+
+// Обработка клавиатурной навигации для поля поиска
+document.getElementById("artist-input-top").addEventListener("keydown", function(e) {
+  const dropdown = document.getElementById("dropdown-results");
+  const items = dropdown.getElementsByTagName("li");
+
+  if (dropdown.classList.contains("hidden") || items.length === 0) return;
+
+  if (e.key === "ArrowDown") {
+    e.preventDefault();
+    dropdownSelectedIndex = (dropdownSelectedIndex + 1) % items.length;
+    updateDropdownSelection();
+  } else if (e.key === "ArrowUp") {
+    e.preventDefault();
+    dropdownSelectedIndex = (dropdownSelectedIndex - 1 + items.length) % items.length;
+    updateDropdownSelection();
+  } else if (e.key === "Enter") {
+    e.preventDefault();
+    if (dropdownSelectedIndex >= 0 && dropdownSelectedIndex < items.length) {
+      // Эмулируем клик по выбранному пункту
+      items[dropdownSelectedIndex].click();
+      // Скрываем dropdown немедленно
+      dropdown.classList.add("hidden");
+      dropdown.innerHTML = "";
+      dropdownSelectedIndex = -1;
+    }
+  } else if (e.key === "Escape") {
+    dropdown.classList.add("hidden");
+    dropdown.innerHTML = "";
+    dropdownSelectedIndex = -1;
+  }
+});
+
+
+// Функция выбора исполнителя при клике (либо по Enter)
+function selectArtist(artist) {
+  // Обновляем выбранного исполнителя (например, сохраняем ID, имя и обновляем изображение)
+  selectedArtistId = artist.id;
+  selectedArtistName = artist.name;
+  updateArtistImage(artist.id);
+
+  // Скрываем выпадающий список
+  const dropdown = document.getElementById("dropdown-results");
+  dropdown.classList.add("hidden");
+  dropdown.innerHTML = "";
+  dropdownSelectedIndex = -1;
+
+  // Сбрасываем настройки и загружаем дискографию
+  resetSettingsToDefault();
+  loadDiscography(artist.id);
+}
+
+// Закрытие списка результатов при клике вне области поиска уже реализовано
+// (если это не хватает, можно добавить отдельный слушатель для document,
+// который проверяет, если событие не попало в .search-wrapper, то скрывает dropdown)

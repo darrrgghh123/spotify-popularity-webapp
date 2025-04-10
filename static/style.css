@@ -218,7 +218,7 @@ button:hover {
 
 /* === Новый блок для меню, чтобы сдвинуть ссылки вправо === */
 .menu-links-container {
-  margin-left: 50px;
+  margin-left: 0px;
   display: flex;
   gap:8px;
 }
@@ -253,6 +253,9 @@ button:hover {
   display: none;  /* для Chrome, Safari и Opera */
 }
 
+#dropdown-results li.selected {
+  background-color: rgba(255, 255, 255, 0.2);
+}
 
 .dropdown li {
   padding: 8px 12px;
@@ -529,13 +532,20 @@ footer {
 }
 
 #menu-bar input {
-  padding: 6px 10px;
+  padding: 10px;                /* немного увеличим отступы */
   font-size: 1em;
+  width: 500px;                 /* можно увеличить, если нужно */
+  background: rgba(128, 128, 128, 0.5);  /* серый прозрачный фон */
+  border: 1px solid rgba(255, 255, 255, 0.3); /* тонкая беловатая рамка (по желанию) */
+  color: white;                 /* цвет текста – белый, чтобы читалось на темном фоне */
   border-radius: 6px;
-  border: none;
-  width: 200px;
-  max-width: 240px;
+  outline: none;                /* убираем стандартную обводку при фокусе */
 }
+
+#menu-bar input::placeholder {
+  color: rgba(204, 204, 204, 1); /* Цвет для #CCCCCC, как пример */
+}
+
 
 #menu-bar button {
   padding: 8px 12px;
@@ -555,6 +565,7 @@ footer {
   text-decoration: none;
   border: none;
   background: none;}
+
 .menu-link:hover {
   color: #fff;
   text-decoration: none;
@@ -587,4 +598,72 @@ footer {
 #discography-container {
   max-height: 500px;
   overflow-y: auto;
+}
+/* Стилизация чекбоксов в Settings */
+.filter-key {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 1px solid rgba(128,128,128,0.5); /* цвет совпадает с поисковой строкой */
+  background-color: transparent;  /* либо можно задать прозрачный фон */
+  border-radius: 3px;  /* если нужны скругленные углы */
+  vertical-align: middle;
+  margin-right: 5px;
+  cursor: pointer;
+  position: relative; /* для позиционирования ::after */
+}
+
+/* Состояние "отмечено" */
+.filter-key:checked {
+  background-color: rgba(128,128,128,0.5); /* фон чекбокса совпадает со строкой поиска */
+  border-color: rgba(128,128,128,0.5);
+}
+
+/* Галочка в отмеченном состоянии */
+.filter-key:checked::after {
+  content: '✔';
+  color: white;  /* или другой цвет галочки, который хорошо контрастирует */
+  font-size: 12px;
+  position: absolute;
+  left: 2px;
+  top: -2px;
+}
+/* Стилизация чекбоксов для "To Look For" и "To Filter Out" */
+.look-for,
+.filter-key,
+#select-all-filters {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 1px solid rgba(128, 128, 128, 0.5);
+  background-color: transparent;
+  border-radius: 3px;
+  vertical-align: middle;
+  margin-right: 5px;
+  cursor: pointer;
+  position: relative;
+}
+
+/* Состояние "отмечено" */
+.look-for:checked,
+.filter-key:checked,
+#select-all-filters:checked {
+  background-color: rgba(128, 128, 128, 0.5);
+  border-color: rgba(128, 128, 128, 0.5);
+}
+
+/* Галочка */
+.look-for:checked::after,
+.filter-key:checked::after,
+#select-all-filters:checked::after {
+  content: '✔';
+  color: white;
+  font-size: 12px;
+  position: absolute;
+  left: 2px;
+  top: -2px;
 }
