@@ -209,10 +209,15 @@ button:hover {
 /* === Новый блок для меню, чтобы сдвинуть ссылки вправо === */
 .menu-links-container {
   margin-left: 50px;
-
   display: flex;
   gap:8px;
 }
+.menu-link.active {
+  color: #fff;
+  background-color: rgba(255, 255, 255, 0.3); /* постоянная подсветка */
+  text-decoration: none;
+}
+
 /* === Dropdown Results (Search) === */
 .dropdown {
   position: absolute;
@@ -473,18 +478,16 @@ footer {
   left: 0;
   width: 100%;
   display: flex;
-  /* Центрируем содержимое по горизонтали */
   justify-content: center;
   align-items: center;
-  padding: 8px 16px; /* уменьшенные отступы для компактности */
+  padding: 16px 16px; /* отступы  */
   background: transparent;
   z-index: 999;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   gap: 8px;  /* расстояние между элементами */
 }
 .search-wrapper {
-  position: relative;  /* ключевая строчка! */
-
+  position: relative;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -539,7 +542,7 @@ footer {
   background: none;}
 .menu-link:hover {
   color: #fff;
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 /* Выравнивание блоков */

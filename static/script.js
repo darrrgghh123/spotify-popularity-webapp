@@ -441,6 +441,7 @@ function showSettings() {
     }, 1200);
   }
 
+
   appInterface.classList.remove("visible");
   appInterface.classList.add("invisible");
 
@@ -580,4 +581,18 @@ function resetSettingsToDefault() {
   if (selectAll) {
     selectAll.checked = false;
   }
+}
+// Функция для установки активной ссылки по её текстовому содержимому
+function setActiveMenuLink(linkName) {
+  const menuLinks = document.querySelectorAll('.menu-link');
+  menuLinks.forEach(link => {
+    // Сначала сбросим класс active у всех ссылок
+    link.classList.remove('active');
+  });
+  // Найдём ссылку с нужным текстом и добавим класс active
+  menuLinks.forEach(link => {
+    if (link.textContent.trim() === linkName) {
+      link.classList.add('active');
+    }
+  });
 }
