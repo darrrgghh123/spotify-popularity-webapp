@@ -225,15 +225,26 @@ async function loadDiscography(artist_id) {
   albumList.innerHTML = "";
 
   data.albums.forEach(album => {
-    // Для показа краткой информации в списке используем, например, имя и год выпуска
-    const li = document.createElement("li");
-    li.textContent = `${album.name} (${album.release_year}) [pop: ${album.popularity}]`;
-    li.addEventListener("click", () => {
-      drawTrackChart(album);
-      selectedAlbum = album;
-    });
-    albumList.appendChild(li);
+  const li = document.createElement("li");
+  li.textContent = `${album.name} (${album.release_year}) [pop: ${album.popularity}]`;
+  li.addEventListener("click", () => {
+    let albumForDisplay = Object.assign({}, album);
+    if (albumForDisplay.tracks && window.settings.filters && window.settings.filters.length > 0) {
+      albumForDisplay.tracks = albumForDisplay.tracks.filter(track => {
+        return !window.settings.filters.some(filterWord => track.name.toLowerCase().includes(filterWord.toLowerCase()));
+      });
+    }
+    if (albumForDisplay.tracks.length > 0) {
+      drawTrackChart(albumForDisplay);
+    } else {
+      // Если треков нет – очищаем контейнер графика
+      document.getElementById("track-chart").innerHTML = "";
+    }
+    selectedAlbum = albumForDisplay;
   });
+  albumList.appendChild(li);
+});
+
 
   drawAlbumChart(data.albums);
 }
@@ -475,7 +486,7 @@ function closeSettings() {
 function applySettings() {
   if (!discographyData) return;
 
-  // Фильтруем альбомы по типу (предполагается, что album.album_type существует; если нет – удалите эту проверку)
+  // Фильтруем альбомы по типу
   let filteredAlbums = discographyData.albums.filter(album => {
     if (album.album_type) {
       return window.settings.types.includes(album.album_type.toLowerCase());
@@ -483,7 +494,7 @@ function applySettings() {
     return true;
   });
 
-  // Убираем альбомы, название которых содержит выбранные ключевые слова для фильтрации
+  // Убираем альбомы, название которых содержит выбранные ключевые слова
   if (window.settings.filters && window.settings.filters.length > 0) {
     filteredAlbums = filteredAlbums.filter(album => {
       const albumNameLower = album.name.toLowerCase();
@@ -498,22 +509,47 @@ function applySettings() {
     const li = document.createElement("li");
     li.textContent = `${album.name} (${album.release_year}) [pop: ${album.popularity}]`;
     li.addEventListener("click", () => {
-      // Перед отрисовкой треков, фильтруем их по ключевым словам (если они есть)
       let albumForDisplay = Object.assign({}, album);
       if (albumForDisplay.tracks && window.settings.filters && window.settings.filters.length > 0) {
         albumForDisplay.tracks = albumForDisplay.tracks.filter(track => {
           return !window.settings.filters.some(filterWord => track.name.toLowerCase().includes(filterWord.toLowerCase()));
         });
       }
-      drawTrackChart(albumForDisplay);
+      if (albumForDisplay.tracks.length > 0) {
+        drawTrackChart(albumForDisplay);
+      } else {
+        document.getElementById("track-chart").innerHTML = "";
+      }
       selectedAlbum = albumForDisplay;
     });
     albumList.appendChild(li);
   });
 
-  // Обновляем график альбомов – функция использует отфильтрованный список
+  // Обновляем график альбомов
   drawAlbumChart(filteredAlbums);
+
+  // Обновляем график треков для выбранного альбома
+  if (selectedAlbum) {
+    // Если выбранный альбом уже не входит в отфильтрованные альбомы,
+    // очищаем контейнер графика треков и сбрасываем selectedAlbum.
+    if (!filteredAlbums.some(album => album.id === selectedAlbum.id)) {
+      selectedAlbum = null;
+      document.getElementById("track-chart").innerHTML = "";
+    } else {
+      // Применяем фильтр к трекам выбранного альбома
+      let filteredTracks = selectedAlbum.tracks.filter(track => {
+        return !window.settings.filters.some(filterWord => track.name.toLowerCase().includes(filterWord.toLowerCase()));
+      });
+      if (filteredTracks.length > 0) {
+        selectedAlbum.tracks = filteredTracks;
+        drawTrackChart(selectedAlbum);
+      } else {
+        document.getElementById("track-chart").innerHTML = "";
+      }
+    }
+  }
 }
+
 
 function closeSettings() {
   const settingsScreen = document.getElementById("settings-screen");
@@ -581,18 +617,4 @@ function resetSettingsToDefault() {
   if (selectAll) {
     selectAll.checked = false;
   }
-}
-// Функция для установки активной ссылки по её текстовому содержимому
-function setActiveMenuLink(linkName) {
-  const menuLinks = document.querySelectorAll('.menu-link');
-  menuLinks.forEach(link => {
-    // Сначала сбросим класс active у всех ссылок
-    link.classList.remove('active');
-  });
-  // Найдём ссылку с нужным текстом и добавим класс active
-  menuLinks.forEach(link => {
-    if (link.textContent.trim() === linkName) {
-      link.classList.add('active');
-    }
-  });
 }
