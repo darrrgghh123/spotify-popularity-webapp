@@ -38,7 +38,8 @@ def get_albums_and_tracks(artist_id):
     offset = 0
 
     while True:
-        res = sp.artist_albums(artist_id, album_type="album, single, compilation", limit=50, offset=offset)
+        # Запрашиваем релизы с нужными типами без пробелов
+        res = sp.artist_albums(artist_id, album_type="album,single,compilation", limit=50, offset=offset)
         items = res.get("items", [])
         if not items:
             break
@@ -51,22 +52,26 @@ def get_albums_and_tracks(artist_id):
             try:
                 details = sp.album(album["id"])
                 popularity = details.get("popularity", 0)
+                # Если release_date отсутствует, возвращаем "????" в качестве значения по умолчанию
                 release_date = details.get("release_date", "????")
-                release_year = release_date.split("-")[0]
+                # Извлекаем год; если дата не задана, используем "Unknown"
+                release_year = release_date.split("-")[0] if release_date != "????" else "Unknown"
+                # Получаем тип релиза (album, single или compilation)
+                album_type = album.get("album_type", "album")
 
                 # Получаем список всех треков альбома
                 tracks_res = sp.album_tracks(album["id"])
-                track_items = tracks_res["items"]
+                track_items = tracks_res.get("items", [])
                 track_ids = [tr["id"] for tr in track_items]
 
-                # Загружаем популярность треков пачкой
+                # Загружаем популярность треков пачками (batch-запросами)
                 full_tracks = []
                 for i in range(0, len(track_ids), 50):
                     chunk = track_ids[i:i+50]
                     try:
                         response = sp.tracks(chunk)
-                        full_tracks.extend(response["tracks"])
-                        time.sleep(0.1)  # пауза между batch-запросами
+                        full_tracks.extend(response.get("tracks", []))
+                        time.sleep(0.1)  # пауза между запросами
                     except:
                         continue
 
@@ -84,10 +89,12 @@ def get_albums_and_tracks(artist_id):
                     "name": album["name"],
                     "popularity": popularity,
                     "release_year": release_year,
-                    "tracks": tracks
+                    "release_date": release_date,  # сохраняем оригинальную дату выпуска
+                    "tracks": tracks,
+                    "album_type": album_type
                 })
 
-                time.sleep(0.2)  # пауза между альбомами
+                time.sleep(0.2)  # короткая пауза между обработкой альбомов
 
             except Exception as e:
                 continue
@@ -96,4 +103,6 @@ def get_albums_and_tracks(artist_id):
         if len(items) < 50:
             break
 
-    return {"albums": albums_raw}
+    # Получаем информацию об артисте и возвращаем её вместе со списком альбомов
+    artist_info = sp.artist(artist_id)
+    return {"albums": albums_raw, "artist": artist_info}

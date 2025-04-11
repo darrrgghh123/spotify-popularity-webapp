@@ -1,3 +1,4 @@
+
   // Если глобальный объект settings ещё не создан, создаём его
 window.settings = window.settings || {
   types: ["album", "single", "compilation"],
@@ -324,9 +325,7 @@ function showLoading(show) {
   spinner.style.display = show ? "block" : "none";
 }
 
-function exportData() {
-  alert("Export functionality coming soon!");
-}
+
 
 /* Функция для форматирования данных Raw Data */
 function formatRawData() {
@@ -339,32 +338,49 @@ function formatRawData() {
     return text;
   }
 
-  // Форматирование информации об артисте, если есть
+  // Вывод информации об артисте, если объект artist присутствует
   if (discographyData.artist) {
-    text += "Artist Info:\n";
-    text += `  Name: ${discographyData.artist.name}\n`;
-    text += `  Genres: ${discographyData.artist.genres.join(', ')}\n`;
-    text += `  Followers: ${discographyData.artist.followers}\n`;
-    text += `  Spotify URL: ${discographyData.artist.spotify_url}\n\n`;
+    // У Spotify API подписчики (followers) приходят в виде объекта { total: число }
+    const followers = discographyData.artist.followers ? discographyData.artist.followers.total : "N/A";
+    // Жанры обычно передаются в виде массива в свойстве genres
+    const genres = (discographyData.artist.genres && discographyData.artist.genres.length > 0)
+                     ? discographyData.artist.genres.join(", ")
+                     : "N/A";
+    text += `Artist: ${discographyData.artist.name}\n`;
+    text += `Followers: ${followers}\n`;
+    text += `Genres: ${genres}\n\n`;
+  } else {
+    text += "Artist info not available.\n\n";
   }
 
-  // Форматирование информации об альбомах
+  // Вычисляем самый свежий релиз на основе release_date
+  if (discographyData.albums && discographyData.albums.length > 0) {
+    let latest = discographyData.albums.reduce((a, b) => {
+      // Если release_date отсутствует или некорректен, считаем его как "0000-00-00"
+      let dateA = a.release_date && a.release_date !== "undefined" ? a.release_date : "0000-00-00";
+      let dateB = b.release_date && b.release_date !== "undefined" ? b.release_date : "0000-00-00";
+      return dateA > dateB ? a : b;
+    });
+    text += `Latest Release: ${latest.name} (pop: ${latest.popularity}, ${latest.release_year})\n\n`;
+  } else {
+    text += "No albums available.\n\n";
+  }
+
+  // Форматирование информации об альбомах – выводим поля: название, ID, популярность и дату выпуска
   if (discographyData.albums && discographyData.albums.length > 0) {
     text += "Albums:\n";
     discographyData.albums.forEach(album => {
-      // Используем первые 4 символа release_date как год (если формат "YYYY-MM-DD")
-      let releaseYear = album.release_date ? album.release_date.substring(0, 4) : "";
-      text += `  • ${album.name} (${releaseYear})\n`;
+      // Выводим только название без дополнительных скобок
+      text += `  • ${album.name}\n`;
       text += `     ID: ${album.id}\n`;
       text += `     Popularity: ${album.popularity}\n`;
-      text += `     Release date: ${album.release_date}\n`;
-      text += `     Spotify URL: ${album.spotify_url}\n\n`;
+      text += `     Release date: ${album.release_date}\n\n`;
     });
   } else {
     text += "Albums: No album data available.\n\n";
   }
 
-  // Форматирование информации о треках: выводим только для выбранного альбома
+  // Форматирование информации о треках для выбранного альбома
   if (selectedAlbum && selectedAlbum.tracks && selectedAlbum.tracks.length > 0) {
     text += "Tracks:\n\n";
     selectedAlbum.tracks.forEach(track => {
@@ -373,11 +389,12 @@ function formatRawData() {
       text += `     Popularity: ${track.popularity}\n\n`;
     });
   } else {
-    text += "Tracks: No track data available.";
+    text += "Tracks: No track data available.\n";
   }
 
   return text;
 }
+
 
 /* Обновляем функцию showRawData, чтобы выводить отформатированный текст */
 function showRawData() {
@@ -623,26 +640,44 @@ function debounce(func, delay) {
 // Глобальная переменная для отслеживания выделенного индекса в выпадающем списке
 let dropdownSelectedIndex = -1;
 
-// Функция обновления выделения в списке
-function updateDropdownSelection() {
-  const dropdown = document.getElementById("dropdown-results");
-  const items = dropdown.getElementsByTagName("li");
-  for (let i = 0; i < items.length; i++) {
-    if (i === dropdownSelectedIndex) {
-      items[i].classList.add("selected");
-    } else {
-      items[i].classList.remove("selected");
+// Функция вычисления расстояния Левенштейна между строками
+function levenshtein(a, b) {
+  const matrix = [];
+  if (a.length === 0) return b.length;
+  if (b.length === 0) return a.length;
+
+  // Инициализируем первую строку и столбец
+  for (let i = 0; i <= b.length; i++) {
+    matrix[i] = [i];
+  }
+  for (let j = 0; j <= a.length; j++) {
+    matrix[0][j] = j;
+  }
+
+  // Заполняем матрицу
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      if (b.charAt(i - 1) === a.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1,  // замена
+          matrix[i][j - 1] + 1,      // вставка
+          matrix[i - 1][j] + 1       // удаление
+        );
+      }
     }
   }
+  return matrix[b.length][a.length];
 }
 
-// Функция обработки динамического поиска
+// Функция обработки динамического поиска с фаззи-поддержкой
 async function doDynamicSearch() {
   const inputEl = document.getElementById("artist-input-top");
   const query = inputEl.value.trim();
   const dropdown = document.getElementById("dropdown-results");
 
-  // Если меньше двух символов – скрываем результаты
+  // Если введено менее 2 символов – скрываем результаты
   if (query.length < 2) {
     dropdown.classList.add("hidden");
     dropdown.innerHTML = "";
@@ -658,22 +693,28 @@ async function doDynamicSearch() {
   });
   const data = await res.json();
 
-  // Фильтруем результаты
-  let results = data.results.filter(artist => {
-    return artist.name.toLowerCase().includes(query.toLowerCase());
+  // Для каждого результата вычисляем score: 0, если в имени содержится query, иначе — расстояние Левенштейна
+  let scoredResults = data.results.map(artist => {
+    let lowerName = artist.name.toLowerCase();
+    let lowerQuery = query.toLowerCase();
+    let score = lowerName.includes(lowerQuery) ? 0 : levenshtein(lowerName, lowerQuery);
+    return { artist, score };
   });
 
-  // Сортируем результаты (опционально)
-  results.sort((a, b) => {
-    return a.name.toLowerCase().indexOf(query.toLowerCase()) - b.name.toLowerCase().indexOf(query.toLowerCase());
-  });
+  // Устанавливаем порог: например, половина длины query
+  const threshold = Math.floor(query.length / 2);
+  // Фильтруем результаты, оставляем только те, у которых score не превышает порог
+  let results = scoredResults.filter(item => item.score <= threshold);
+  // Сортируем результаты по возрастанию score (наилучшие совпадения первыми)
+  results.sort((a, b) => a.score - b.score);
+  // Извлекаем сами объекты artist
+  results = results.map(item => item.artist);
 
-  // Обновляем выпадающий список и сохраняем URL изображений
+  // Обновляем выпадающий список
   dropdown.innerHTML = "";
   results.forEach((artist) => {
-    // Заполняем глобальный объект artistImages:
+    // Сохраняем URL изображения в глобальный объект
     artistImages[artist.id] = artist.image || null;
-
     const li = document.createElement("li");
     li.textContent = artist.name;
     li.dataset.id = artist.id;
@@ -684,10 +725,24 @@ async function doDynamicSearch() {
   });
   dropdown.classList.remove("hidden");
 
-  // Сбрасываем выделение
+  // Сбрасываем индекс выделения
   dropdownSelectedIndex = -1;
 }
 
+// Обновлённая функция для выделения пунктов dropdown с автопрокруткой
+function updateDropdownSelection() {
+  const dropdown = document.getElementById("dropdown-results");
+  const items = dropdown.getElementsByTagName("li");
+  for (let i = 0; i < items.length; i++) {
+    if (i === dropdownSelectedIndex) {
+      items[i].classList.add("selected");
+      // Прокручиваем выбранный элемент в область видимости
+      items[i].scrollIntoView({ block: "nearest", behavior: "smooth" });
+    } else {
+      items[i].classList.remove("selected");
+    }
+  }
+}
 
 // Обёрнутая функция с дебаунсом (300 мс задержка)
 const dynamicSearch = debounce(doDynamicSearch, 300);
@@ -699,7 +754,6 @@ document.getElementById("artist-input-top").addEventListener("input", dynamicSea
 document.getElementById("artist-input-top").addEventListener("keydown", function(e) {
   const dropdown = document.getElementById("dropdown-results");
   const items = dropdown.getElementsByTagName("li");
-
   if (dropdown.classList.contains("hidden") || items.length === 0) return;
 
   if (e.key === "ArrowDown") {
@@ -713,9 +767,7 @@ document.getElementById("artist-input-top").addEventListener("keydown", function
   } else if (e.key === "Enter") {
     e.preventDefault();
     if (dropdownSelectedIndex >= 0 && dropdownSelectedIndex < items.length) {
-      // Эмулируем клик по выбранному пункту
       items[dropdownSelectedIndex].click();
-      // Скрываем dropdown немедленно
       dropdown.classList.add("hidden");
       dropdown.innerHTML = "";
       dropdownSelectedIndex = -1;
@@ -730,7 +782,7 @@ document.getElementById("artist-input-top").addEventListener("keydown", function
 
 // Функция выбора исполнителя при клике (либо по Enter)
 function selectArtist(artist) {
-  // Обновляем выбранного исполнителя (например, сохраняем ID, имя и обновляем изображение)
+  // Обновляем выбранного исполнителя
   selectedArtistId = artist.id;
   selectedArtistName = artist.name;
   updateArtistImage(artist.id);
@@ -741,11 +793,13 @@ function selectArtist(artist) {
   dropdown.innerHTML = "";
   dropdownSelectedIndex = -1;
 
-  // Сбрасываем настройки и загружаем дискографию
+  // Сбрасываем настройки к значениям по умолчанию и загружаем дискографию
   resetSettingsToDefault();
   loadDiscography(artist.id);
+
+  // Возвращаем пользователя на главный интерфейс (если он находится на Raw Data или Settings)
+  goToMain();
 }
 
-// Закрытие списка результатов при клике вне области поиска уже реализовано
-// (если это не хватает, можно добавить отдельный слушатель для document,
-// который проверяет, если событие не попало в .search-wrapper, то скрывает dropdown)
+
+
