@@ -39,7 +39,7 @@ def get_albums_and_tracks(artist_id):
 
     while True:
         # Запрашиваем релизы с нужными типами без пробелов
-        res = sp.artist_albums(artist_id, album_type="album,single,compilation", limit=50, offset=offset)
+        res = sp.artist_albums(artist_id, album_type="album,single", limit=50, offset=offset)
         items = res.get("items", [])
         if not items:
             break

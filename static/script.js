@@ -16,7 +16,53 @@ document.addEventListener("DOMContentLoaded", () => {
   const footer = document.querySelector("footer");
   // (Если нужен "search-button", добавьте его обработчик только если такой элемент есть)
   // const searchBtn = document.getElementById("search-button");
+   // Подключаем функциональность для кнопки очистки поиска (clear search)
+  const searchInput = document.getElementById("artist-input-top");
+  const clearSearchBtn = document.getElementById("clear-search");
+  const dropdown = document.getElementById("dropdown-results");
 
+  if (clearSearchBtn) {
+    clearSearchBtn.addEventListener("click", () => {
+      searchInput.value = "";                // Очищаем поле ввода
+      dropdown.classList.add("hidden");      // Скрываем выпадающий список, если он открыт
+      // Запускаем событие input для обновления динамического поиска (если требуется)
+      searchInput.dispatchEvent(new Event("input"));
+    });
+  }
+  // Обработка нажатия на мобильный гамбургер (элемент с id="menu-toggle")
+  const menuToggle = document.getElementById("menu-toggle");
+  const mobileMenu = document.getElementById("mobile-menu");
+  if (menuToggle && mobileMenu) {
+    menuToggle.addEventListener("click", (e) => {
+      e.stopPropagation(); // чтобы клик не срабатывал в document
+      mobileMenu.classList.toggle("hidden");
+    });
+  }
+  window.mobileMenuLinkClicked = function() {
+  if (mobileMenu && !mobileMenu.classList.contains("hidden")) {
+    mobileMenu.classList.add("hidden");
+  }
+};
+
+// Если экран меньше или равен 768px – мобильное устройство:
+  if (window.innerWidth <= 768) {
+    document.getElementById("artist-input-top").placeholder = "Enter artist name";
+  }
+  // Функция для закрытия мобильного меню при клике по ссылке
+  window.mobileMenuLinkClicked = function() {
+    if (mobileMenu && !mobileMenu.classList.contains("hidden")) {
+      mobileMenu.classList.add("hidden");
+    }
+  };
+
+  // Закрытие мобильного меню при клике вне него
+  document.addEventListener("click", (e) => {
+    if (mobileMenu && !e.target.closest("#mobile-menu") && !e.target.closest("#menu-toggle")) {
+      if (!mobileMenu.classList.contains("hidden")) {
+        mobileMenu.classList.add("hidden");
+      }
+    }
+  });
   // Обработчики для чекбоксов "To Filter Out"
 const filterCheckboxes = document.querySelectorAll(".filter-key");
 const selectAll = document.getElementById("select-all-filters");
@@ -677,7 +723,6 @@ async function doDynamicSearch() {
   const query = inputEl.value.trim();
   const dropdown = document.getElementById("dropdown-results");
 
-  // Если введено менее 2 символов – скрываем результаты
   if (query.length < 2) {
     dropdown.classList.add("hidden");
     dropdown.innerHTML = "";
@@ -685,7 +730,6 @@ async function doDynamicSearch() {
     return;
   }
 
-  // Выполняем AJAX-запрос к API поиска
   const res = await fetch("/search_artist", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -693,41 +737,43 @@ async function doDynamicSearch() {
   });
   const data = await res.json();
 
-  // Для каждого результата вычисляем score: 0, если в имени содержится query, иначе — расстояние Левенштейна
   let scoredResults = data.results.map(artist => {
-    let lowerName = artist.name.toLowerCase();
-    let lowerQuery = query.toLowerCase();
-    let score = lowerName.includes(lowerQuery) ? 0 : levenshtein(lowerName, lowerQuery);
+    const lowerName = artist.name.toLowerCase();
+    const lowerQuery = query.toLowerCase();
+    const score = lowerName.includes(lowerQuery) ? 0 : levenshtein(lowerName, lowerQuery);
     return { artist, score };
   });
 
-  // Устанавливаем порог: например, половина длины query
   const threshold = Math.floor(query.length / 2);
-  // Фильтруем результаты, оставляем только те, у которых score не превышает порог
   let results = scoredResults.filter(item => item.score <= threshold);
-  // Сортируем результаты по возрастанию score (наилучшие совпадения первыми)
   results.sort((a, b) => a.score - b.score);
-  // Извлекаем сами объекты artist
   results = results.map(item => item.artist);
 
-  // Обновляем выпадающий список
   dropdown.innerHTML = "";
-  results.forEach((artist) => {
-    // Сохраняем URL изображения в глобальный объект
-    artistImages[artist.id] = artist.image || null;
-    const li = document.createElement("li");
-    li.textContent = artist.name;
-    li.dataset.id = artist.id;
-    li.addEventListener("click", () => {
-      selectArtist(artist);
-    });
-    dropdown.appendChild(li);
-  });
-  dropdown.classList.remove("hidden");
 
-  // Сбрасываем индекс выделения
-  dropdownSelectedIndex = -1;
+  if (results.length === 0) {
+    const li = document.createElement("li");
+    li.textContent = "No matches found";
+    li.classList.add("no-results-message"); // для дополнительной стилизации, если нужно
+    dropdown.appendChild(li);
+    // Показываем dropdown, чтобы сообщение было видно
+    dropdown.classList.remove("hidden");
+  } else {
+    results.forEach(artist => {
+      artistImages[artist.id] = artist.image || null;
+      const li = document.createElement("li");
+      li.textContent = artist.name;
+      li.dataset.id = artist.id;
+      li.addEventListener("click", () => {
+        selectArtist(artist);
+      });
+      dropdown.appendChild(li);
+    });
+    dropdown.classList.remove("hidden");
+    dropdownSelectedIndex = -1;
+  }
 }
+
 
 // Обновлённая функция для выделения пунктов dropdown с автопрокруткой
 function updateDropdownSelection() {

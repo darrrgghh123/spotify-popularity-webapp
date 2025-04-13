@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Spotify Popularity Analyzer</title>
+  <title>Spotty5 Popularity Analyzer</title>
   <link rel="stylesheet" href="/static/style.css" />
   <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
 </head>
@@ -18,16 +18,33 @@
 <!-- Fixed Menu Bar -->
 <div id="menu-bar" class="invisible">
   <img src="/static/favicon.ico" alt="Logo" id="logo-link" onclick="goToMain()" />
+
   <div class="search-wrapper">
     <input type="text" id="artist-input-top" placeholder="Enter artist name..." />
+    <span id="clear-search" class="clear-icon">✖</span>
     <ul id="dropdown-results" class="dropdown hidden"></ul>
   </div>
 
-  <!-- Обернули ссылки в отдельный контейнер -->
-  <div class="menu-links-container">
+  <!-- Десктопное меню (показывается на больших экранах) -->
+  <div class="menu-links-container desktop-only">
     <span class="menu-link" onclick="showRawData()">Raw Data</span>
     <span class="menu-link" onclick="showSettings()">Settings</span>
     <span class="menu-link" onclick="window.open('https://extreme-vocal-techniques-db.onrender.com', '_blank')"><i>EMVT Database</i></span>
+  </div>
+
+  <!-- Мобильная иконка "гамбургера" (показывается только на мобильных) -->
+  <div class="hamburger mobile-only">
+  <span id="menu-toggle" class="hamburger-icon">&#9776;</span>
+  </div>
+</div>
+
+<!-- Мобильное меню - оверлей, изначально скрыт -->
+<div id="mobile-menu" class="mobile-menu hidden">
+  <div class="mobile-menu-content">
+    <a href="javascript:void(0)" class="mobile-menu-link" onclick="mobileMenuLinkClicked(); showRawData();">Raw Data</a>
+<a href="javascript:void(0)" class="mobile-menu-link" onclick="mobileMenuLinkClicked(); showSettings();">Settings</a>
+<a href="javascript:void(0)" class="mobile-menu-link" onclick="mobileMenuLinkClicked(); window.open('https://extreme-vocal-techniques-db.onrender.com', '_blank');">EMVT Database</a>
+
   </div>
 </div>
 
@@ -84,7 +101,6 @@
       <h3>To Look For</h3>
       <label><input type="checkbox" class="look-for" value="album" checked> Album</label>
       <label><input type="checkbox" class="look-for" value="single" checked> Single</label>
-      <label><input type="checkbox" class="look-for" value="compilation" checked> Compilation</label>
       <hr>
       <h3>To Filter Out</h3>
       <label>

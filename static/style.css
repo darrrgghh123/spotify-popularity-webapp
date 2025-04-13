@@ -526,6 +526,23 @@ footer {
 .search-wrapper input {
   margin-right: 10px;
 }
+/* Стили для красного крестика (clear icon) */
+.clear-icon {
+  position: absolute;
+  right: 20px;           /* увеличиваем отступ от правого края, перемещая элемент левее */
+  top: 50%;              /* вертикально центрируем */
+  transform: translateY(-50%);
+  transition: transform 0.3s ease;  /* добавляем плавную анимацию */
+  cursor: pointer;       /* меняем курсор при наведении */
+  color: grey;            /* красный цвет */
+  font-size: 1.2em;      /* размер шрифта */
+  user-select: none;     /* запрет выделения текста */
+}
+
+.clear-icon:hover {
+  transform: translateY(-50%) scale(0.82);  /* аналог анимации логотипа */
+}
+
 #dropdown-results {
   position: absolute;
   top: 110%;
@@ -536,6 +553,13 @@ footer {
   border-radius: 8px;
   z-index: 1000;
 }
+.dropdown li.no-results-message {
+  cursor: default;
+  color: #ccc;
+  text-align: left;
+  padding: 8px 12px;
+}
+
 #menu-bar img {
   width: 32px;
   height: 32px;
@@ -553,6 +577,7 @@ footer {
   color: white;                 /* цвет текста – белый, чтобы читалось на темном фоне */
   border-radius: 6px;
   outline: none;                /* убираем стандартную обводку при фокусе */
+  padding-right: 40px;
 }
 
 #menu-bar input::placeholder {
@@ -680,3 +705,82 @@ footer {
   left: 2px;
   top: -2px;
 }
+/* Скрытие мобильного меню на десктопе и наоборот */
+.desktop-only { display: block; }
+.mobile-only { display: none; }
+
+/* Мобильный оверлей меню */
+#mobile-menu {
+  position: fixed;
+  top: 60px;      /* задайте значение, равное высоте вашей панели меню */
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 1100;
+  padding: 10px 0;
+}
+#mobile-menu.hidden {
+  display: none;
+}
+.hamburger-icon {
+  font-size: 1.8em;
+  line-height: 1;
+  cursor: pointer;
+  color: white;
+}
+
+
+/* Стили для мобильного меню внутри оверлея */
+.mobile-menu-content {
+  background: rgba(0, 0, 0, 0.9);
+  margin: 0 20px;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.mobile-menu-link {
+  display: block;
+  padding: 12px 16px;
+  color: white;
+  text-decoration: none;
+  border-bottom: 1px solid #666;
+  font-size: 1em;
+}
+.mobile-menu-link:last-child {
+  border-bottom: none;
+}
+
+/* Медиа-запрос для мобильных устройств */
+@media (max-width: 768px) {
+  .desktop-only {
+    display: none;
+  }
+  .mobile-only {
+    display: block;
+  }
+  .filter-key,
+  .look-for,
+  #select-all-filters {
+    -webkit-appearance: checkbox; /* Для WebKit-браузеров */
+    -moz-appearance: checkbox;    /* Для Firefox */
+    appearance: auto;             /* Стандартный вид */
+    width: auto;
+    height: auto;
+    border: initial;
+    background-color: initial;
+    border-radius: initial;
+  }
+  /* Отключаем псевдоэлемент, чтобы не было дополнительной галочки */
+  .filter-key:checked::after,
+  .look-for:checked::after,
+  #select-all-filters:checked::after {
+    content: none;
+  }
+  .clear-icon {
+    right: 30px;
+  }
+  /* Если нужно, адаптируйте размеры других элементов */
+  #menu-bar input {
+    width: calc(100% - 80px);
+  }
+}
+
