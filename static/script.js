@@ -1,14 +1,19 @@
 
   // Если глобальный объект settings ещё не создан, создаём его
 window.settings = window.settings || {
-  types: ["album", "single", "compilation"],
+  types: ["album"],
   filters: []
 };
 
 document.addEventListener("DOMContentLoaded", () => {
+ // Задержка появления экрана приветствия (например, 500 мс)
+  const welcomeScreen = document.getElementById("welcome-screen");
+  setTimeout(() => {
+    welcomeScreen.classList.remove("invisible");
+    welcomeScreen.classList.add("visible");
+  }, 1000);
   // Объявляем элементы, доступные после загрузки DOM
   const startButton = document.getElementById("start-button");
-  const welcomeScreen = document.getElementById("welcome-screen");
   const appInterface = document.getElementById("app-interface");
   const searchBtnTop = document.getElementById("search-button-top");
   const artistInputTop = document.getElementById("artist-input-top");
@@ -243,50 +248,44 @@ function updateArtistImage(artistId) {
   }
 }
 
-async function loadDiscography(artist_id) {
+async function loadDiscography(artist_id, releaseTypes = "album") {
   showLoading(true);
-
   const res = await fetch("/get_discography", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ artist_id })
+    body: JSON.stringify({ artist_id: artist_id, release_types: releaseTypes })
   });
-
   const data = await res.json();
   showLoading(false);
 
-  // Сохраняем данные дискографии (ожидается, что JSON содержит поля artist и albums)
   discographyData = data;
-  // Сбрасываем выбранный альбом
   selectedAlbum = null;
-
   const albumList = document.getElementById("album-list");
   albumList.innerHTML = "";
 
   data.albums.forEach(album => {
-  const li = document.createElement("li");
-  li.textContent = `${album.name} (${album.release_year}) [pop: ${album.popularity}]`;
-  li.addEventListener("click", () => {
-    let albumForDisplay = Object.assign({}, album);
-    if (albumForDisplay.tracks && window.settings.filters && window.settings.filters.length > 0) {
-      albumForDisplay.tracks = albumForDisplay.tracks.filter(track => {
-        return !window.settings.filters.some(filterWord => track.name.toLowerCase().includes(filterWord.toLowerCase()));
-      });
-    }
-    if (albumForDisplay.tracks.length > 0) {
-      drawTrackChart(albumForDisplay);
-    } else {
-      // Если треков нет – очищаем контейнер графика
-      document.getElementById("track-chart").innerHTML = "";
-    }
-    selectedAlbum = albumForDisplay;
+    const li = document.createElement("li");
+    li.textContent = `${album.name} (${album.release_year}) [pop: ${album.popularity}]`;
+    li.addEventListener("click", () => {
+      let albumForDisplay = Object.assign({}, album);
+      if (albumForDisplay.tracks && window.settings.filters && window.settings.filters.length > 0) {
+        albumForDisplay.tracks = albumForDisplay.tracks.filter(track => {
+          return !window.settings.filters.some(filterWord => track.name.toLowerCase().includes(filterWord.toLowerCase()));
+        });
+      }
+      if (albumForDisplay.tracks.length > 0) {
+        drawTrackChart(albumForDisplay);
+      } else {
+        document.getElementById("track-chart").innerHTML = "";
+      }
+      selectedAlbum = albumForDisplay;
+    });
+    albumList.appendChild(li);
   });
-  albumList.appendChild(li);
-});
-
 
   drawAlbumChart(data.albums);
 }
+
 
 function drawAlbumChart(albums) {
   // Сортируем по убыванию популярности (наибольшая популярность первой)
@@ -652,14 +651,23 @@ function goToMain() {
 // Функция сброса настроек к значениям по умолчанию
 function resetSettingsToDefault() {
   // Сброс объекта настроек
-  window.settings.types = ["album", "single", "compilation"];
+  window.settings.types = ["album"];
   window.settings.filters = [];
 
-  // Сброс чекбоксов "To Look For" (по умолчанию все включены)
-  const lookForCheckboxes = document.querySelectorAll(".look-for");
-  lookForCheckboxes.forEach(cb => {
-    cb.checked = true;
+ // Обработчики для чекбоксов "To Look For"
+const lookForCheckboxes = document.querySelectorAll(".look-for");
+lookForCheckboxes.forEach(cb => {
+  cb.addEventListener("change", function() {
+    updateLookForSettings();
+    // Если уже выбран исполнитель, выполняем повторную загрузку дискографии
+    if (selectedArtistId) {
+      // Собираем значение для параметра release_types, например, "album" или "album,single"
+      const releaseTypes = window.settings.types.join(",");
+      loadDiscography(selectedArtistId, releaseTypes);
+    }
   });
+});
+
 
   // Сброс чекбоксов "To Filter Out" (по умолчанию ни один не выбран)
   const filterCheckboxes = document.querySelectorAll(".filter-key");

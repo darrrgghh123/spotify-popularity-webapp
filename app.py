@@ -19,13 +19,13 @@ def search_artist():
 
 @app.route("/get_discography", methods=["POST"])
 def get_discography():
-    data = request.json
+    data = request.get_json()
     artist_id = data.get("artist_id")
-    if not artist_id:
-        return jsonify({"error": "No artist ID provided"}), 400
+    # По умолчанию загружаем только "album"
+    release_types = data.get("release_types", "album")
+    albums_data = get_albums_and_tracks(artist_id, release_types=release_types)
+    return jsonify(albums_data)
 
-    albums = get_albums_and_tracks(artist_id)
-    return jsonify(albums)
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -10,14 +10,14 @@
 <body>
 
 <!-- Welcome Screen -->
-<div id="welcome-screen">
+<div id="welcome-screen" class="invisible">
   <h1>Spotty5 Popularity Analyzer</h1>
   <button id="start-button">Start</button>
 </div>
 
 <!-- Fixed Menu Bar -->
 <div id="menu-bar" class="invisible">
-  <img src="/static/favicon.ico" alt="Logo" id="logo-link" onclick="goToMain()" />
+  <img src="/static/logo.ico" alt="Logo" id="logo-link" onclick="goToMain()" />
 
   <div class="search-wrapper">
     <input type="text" id="artist-input-top" placeholder="Enter artist name..." />
@@ -100,7 +100,7 @@
     <div class="settings-content">
       <h3>To Look For</h3>
       <label><input type="checkbox" class="look-for" value="album" checked> Album</label>
-      <label><input type="checkbox" class="look-for" value="single" checked> Single</label>
+      <label><input type="checkbox" class="look-for" value="single" > Single</label>
       <hr>
       <h3>To Filter Out</h3>
       <label>
@@ -110,18 +110,19 @@
         <label><input type="checkbox" class="filter-key" value="demo"> Demo</label>
         <label><input type="checkbox" class="filter-key" value="live"> Live</label>
         <label><input type="checkbox" class="filter-key" value="remastered"> Remastered</label>
+        <label><input type="checkbox" class="filter-key" value="remaster"> Remaster</label>
         <label><input type="checkbox" class="filter-key" value="edition"> Edition</label>
         <label><input type="checkbox" class="filter-key" value="deluxe"> Deluxe</label>
         <label><input type="checkbox" class="filter-key" value="reissue"> Reissue</label>
         <label><input type="checkbox" class="filter-key" value="remix"> Remix</label>
+        <label><input type="checkbox" class="filter-key" value="mix"> Mix</label>
         <label><input type="checkbox" class="filter-key" value="edit"> Edit</label>
         <label><input type="checkbox" class="filter-key" value="feat"> Feat</label>
         <label><input type="checkbox" class="filter-key" value="instrumental"> Instrumental</label>
-        <label><input type="checkbox" class="filter-key" value="instrumental"> Acoustic</label>
+        <label><input type="checkbox" class="filter-key" value="acoustic"> Acoustic</label>
         <label><input type="checkbox" class="filter-key" value="bonus"> Bonus</label>
-        <label><input type="checkbox" class="filter-key" value="bonus"> Version</label>
-        <label><input type="checkbox" class="filter-key" value="bonus"> Mix</label>
-        <label><input type="checkbox" class="filter-key" value="bonus"> Greatest</label>
+        <label><input type="checkbox" class="filter-key" value="version"> Version</label>
+        <label><input type="checkbox" class="filter-key" value="greatest"> Greatest</label>
       </div>
     </div>
   </div>

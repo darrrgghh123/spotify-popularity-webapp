@@ -561,7 +561,7 @@ footer {
 }
 
 #menu-bar img {
-  width: 32px;
+  width: auto;
   height: 32px;
   cursor: pointer;
   border-radius: 6px;
