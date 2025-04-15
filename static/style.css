@@ -797,7 +797,7 @@ footer {
     transform: translateY(-50%);
     z-index: 2;
       color: red;            /* красный цвет */
-
+  font-family: Arial, sans-serif; /* задаем шрифт, который позволит менять цвет */
     display: none;  /* по умолчанию скрыт, будет показан через JS, если в поле есть текст */
     transition: none; /* отключаем анимацию */
   }
@@ -820,7 +820,7 @@ footer {
     transform: translateY(-50%);
     z-index: 2;
       color: red;            /* красный цвет */
-
+  font-family: Arial, sans-serif; /* задаем шрифт, который позволит менять цвет */
     display: none;  /* по умолчанию скрыт, будет показан через JS, если в поле есть текст */
     transition: none; /* отключаем анимацию */
   }
