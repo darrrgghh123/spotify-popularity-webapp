@@ -533,7 +533,7 @@ footer {
   top: 50%;              /* вертикально центрируем */
   transform: translateY(-50%);
   cursor: pointer;       /* меняем курсор при наведении */
-  color: white;            /* красный цвет */
+  color: grey;            /* красный цвет */
   font-size: 1.2em;      /* размер шрифта */
   user-select: none;     /* запрет выделения текста */
 }
@@ -796,7 +796,7 @@ footer {
     top: 50%;
     transform: translateY(-50%);
     z-index: 2;
-      color: white;            /* красный цвет */
+      color: red;            /* красный цвет */
 
     display: none;  /* по умолчанию скрыт, будет показан через JS, если в поле есть текст */
     transition: none; /* отключаем анимацию */
@@ -819,7 +819,7 @@ footer {
     top: 50%;
     transform: translateY(-50%);
     z-index: 2;
-      color: white;            /* красный цвет */
+      color: red;            /* красный цвет */
 
     display: none;  /* по умолчанию скрыт, будет показан через JS, если в поле есть текст */
     transition: none; /* отключаем анимацию */
