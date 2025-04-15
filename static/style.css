@@ -532,7 +532,6 @@ footer {
   right: 20px;           /* увеличиваем отступ от правого края, перемещая элемент левее */
   top: 50%;              /* вертикально центрируем */
   transform: translateY(-50%);
-  transition: transform 0.3s ease;  /* добавляем плавную анимацию */
   cursor: pointer;       /* меняем курсор при наведении */
   color: grey;            /* красный цвет */
   font-size: 1.2em;      /* размер шрифта */
@@ -751,12 +750,15 @@ footer {
 
 /* Медиа-запрос для мобильных устройств */
 @media (max-width: 768px) {
+  /* Скрываем десктопные элементы и показываем мобильные */
   .desktop-only {
     display: none;
   }
   .mobile-only {
     display: block;
   }
+
+  /* Сброс стилей для чекбоксов на стандартные */
   .filter-key,
   .look-for,
   #select-all-filters {
@@ -775,12 +777,47 @@ footer {
   #select-all-filters:checked::after {
     content: none;
   }
-  .clear-icon {
-    right: 30px;
+
+  /* Настройка для контейнера поиска */
+  .search-wrapper {
+    position: relative;
+    gap: 0; /* убираем gap, чтобы кнопка очистки не смещалась */
   }
-  /* Если нужно, адаптируйте размеры других элементов */
+  /* Устанавливаем ширину и правый отступ для поля ввода */
   #menu-bar input {
     width: calc(100% - 80px);
+    padding-right: 2.5em; /* оставляем место для крестика */
+  }
+
+  /* Позиционирование и видимость кнопки очистки */
+  .clear-icon {
+    position: absolute;
+    left: 149px;  /* располагаем ближе к правому краю контейнера */
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    display: none;  /* по умолчанию скрыт, будет показан через JS, если в поле есть текст */
+    transition: none; /* отключаем анимацию */
+  }
+  .clear-icon:hover {
+    /* Убираем эффекты hover – сохраняем только исходное положение */
+    transform: translateY(-50%);
   }
 }
+.dropdown {
+    width: 100%;       /* чтобы оно совпадало с шириной поля ввода */
+    max-width: 100%;
+  }
 
+
+@media (max-width: 400px) {
+  .clear-icon {
+    position: absolute;
+    left: 125px;  /* располагаем ближе к правому краю контейнера */
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    display: none;  /* по умолчанию скрыт, будет показан через JS, если в поле есть текст */
+    transition: none; /* отключаем анимацию */
+  }
+}

@@ -25,7 +25,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const searchInput = document.getElementById("artist-input-top");
   const clearSearchBtn = document.getElementById("clear-search");
   const dropdown = document.getElementById("dropdown-results");
-
+clearSearchBtn.style.display = "none";
+// Добавляем обработчик изменения поля ввода,
+// чтобы кнопка очистки появлялась только если что-то введено.
+searchInput.addEventListener("input", function() {
+  if (this.value.trim().length > 0) {
+    clearSearchBtn.style.display = "block";  // Показываем крестик
+  } else {
+    clearSearchBtn.style.display = "none";     // Скрываем, если поле пустое
+  }
+});
   if (clearSearchBtn) {
     clearSearchBtn.addEventListener("click", () => {
       searchInput.value = "";                // Очищаем поле ввода
@@ -51,7 +60,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // Если экран меньше или равен 768px – мобильное устройство:
   if (window.innerWidth <= 768) {
-    document.getElementById("artist-input-top").placeholder = "Enter artist name";
+    document.getElementById("artist-input-top").placeholder = "Find artist";
   }
   // Функция для закрытия мобильного меню при клике по ссылке
   window.mobileMenuLinkClicked = function() {
