@@ -21,11 +21,9 @@ def search_artist():
 def get_discography():
     data = request.get_json()
     artist_id = data.get("artist_id")
-    # По умолчанию загружаем только "album"
     release_types = data.get("release_types", "album")
     albums_data = get_albums_and_tracks(artist_id, release_types=release_types)
     return jsonify(albums_data)
-
 
 if __name__ == "__main__":
     app.run(debug=True)
