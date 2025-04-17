@@ -21,7 +21,11 @@
 
   <div class="search-wrapper">
     <input type="text" id="artist-input-top" placeholder="Enter artist name..." />
-    <span id="clear-search" class="clear-icon">✖</span>
+<!-- вместо span -->
+<svg id="clear-search" class="clear-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <line x1="18" y1="6"  x2="6" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+  <line x1="6"  y1="6"  x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+</svg>
     <ul id="dropdown-results" class="dropdown hidden"></ul>
   </div>
 

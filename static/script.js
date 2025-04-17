@@ -18,6 +18,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const searchBtnTop = document.getElementById("search-button-top");
   const artistInputTop = document.getElementById("artist-input-top");
     const menuBar = document.getElementById("menu-bar");         // ДОБАВЛЕНО
+    // плавно меняем фон меню при прокрутке
+window.addEventListener('scroll', () => {
+  if (window.scrollY > 10) {
+    menuBar.classList.add('scrolled');
+  } else {
+    menuBar.classList.remove('scrolled');
+  }
+});
   const footer = document.querySelector("footer");
   // (Если нужен "search-button", добавьте его обработчик только если такой элемент есть)
   // const searchBtn = document.getElementById("search-button");
@@ -60,7 +68,7 @@ searchInput.addEventListener("input", function() {
 
 // Если экран меньше или равен 768px – мобильное устройство:
   if (window.innerWidth <= 768) {
-    document.getElementById("artist-input-top").placeholder = "Find artist";
+    document.getElementById("artist-input-top").placeholder = "Enter artist name";
   }
   // Функция для закрытия мобильного меню при клике по ссылке
   window.mobileMenuLinkClicked = function() {

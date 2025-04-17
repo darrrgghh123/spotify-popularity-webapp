@@ -5,22 +5,29 @@
 html, body {
   margin: 0;
   padding: 0;
-  height: 100vh;
-  overflow-y: hidden;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
   font-family: 'Segoe UI', sans-serif;
-  background: linear-gradient(-45deg, #1DB954, #121212, #191414, #1ED760);
-  background-size: 400% 400%;
-  animation: gradient 10s ease infinite;
   color: white;
   overflow-x: hidden;
+  background: linear-gradient(-66deg, #1DB954, #121212, #191414, #1ED760);
+  background-size: 400% 400%;
+  -webkit-background-size: 400% 400%;
+  animation: gradient 8s ease infinite;
+  -webkit-animation: gradient 8s ease infinite;
+  /* используем scroll-attachment, чтобы браузеры не «отрубали» анимацию */
+  background-attachment: scroll;
 }
 
 
-@keyframes gradient {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
+#app-interface,
+ #raw-data-screen,
+ #settings-screen {
+   flex: 1;
+   display: flex;          /* если нужно для выравнивания внутрянки */
+   flex-direction: column;
+ }
 
 /* === Welcome Screen === */
 #welcome-screen {
@@ -71,10 +78,21 @@ html, body {
   opacity: 0;
   pointer-events: none;
 }
+
 .visible {
   opacity: 1;
   pointer-events: auto;
   transition: all 1.2s ease;
+}
+#app-interface.invisible,
+#raw-data-screen.invisible,
+#settings-screen.invisible {
+  display: none !important;
+}
+
+/* (Опционально) прячем menu-bar при invisible */
+#menu-bar.invisible {
+  display: none !important;
 }
 
 /* === Main Interface === */
@@ -221,8 +239,8 @@ button:hover {
 /* === Новый блок для меню, чтобы сдвинуть ссылки вправо === */
 .menu-links-container {
   margin-left: 0px;
-  display: flex;
-  gap:8px;
+  display: flex !important;;
+  gap: 8px !important;;
 }
 .menu-link.active {
   color: #fff;
@@ -339,22 +357,16 @@ li.selected {
 
 
 /* === Footer === */
-footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  width: 100%;
-  text-align: center;
-  padding: 20px;
-  font-size: 0.85em;
-  color: white;
-  z-index: 998;
-  background: rgba(0, 0, 0, 0.2);
-  margin: 0;
-  box-sizing: border-box;
-    display: none; /* футер скрыт до завершения анимации приветствия */
-}
+ footer {
+   text-align: center;
+   padding: 20px 20px;
+   font-size: 0.85em;
+   color: white;
+ margin-top: auto;      /* прижимает футер к низу контейнера */
+background: rgba(0, 0, 0, 0.2);
+box-sizing: border-box;
+display: none;         /* JS покажет после старта */
+ }
 
 .footer-container {
   max-width: 1200px;
@@ -367,6 +379,10 @@ footer {
 /* === Mobile View === */
 @media (max-width: 768px) {
   .main-container {
+  .menu-links-container.desktop-only {
+    /* скрываем десктопные ссылки под бургер */
+    display: none !important;
+  }
     flex-direction: column;
     align-items: center;
   }
@@ -516,6 +532,10 @@ footer {
   z-index: 999;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   gap: 8px;  /* расстояние между элементами */
+    transition: background 0.3s ease;
+}
+#menu-bar.scrolled {
+  background: rgba(0, 0, 0, 0.5);
 }
 .search-wrapper {
   position: relative;
@@ -535,7 +555,9 @@ footer {
   cursor: pointer;       /* меняем курсор при наведении */
   color: grey;            /* красный цвет */
   font-size: 1.2em;      /* размер шрифта */
-  user-select: none;     /* запрет выделения текста */
+  user-select: none;
+        width: 22px;        /* уменьшили размер */
+  height: 22px;/* запрет выделения текста */
 }
 
 .clear-icon:hover {
@@ -785,18 +807,20 @@ footer {
   }
   /* Устанавливаем ширину и правый отступ для поля ввода */
   #menu-bar input {
-    width: calc(100% - 80px);
+    width: calc(100% - 18px);
     padding-right: 2.5em; /* оставляем место для крестика */
   }
 
   /* Позиционирование и видимость кнопки очистки */
   .clear-icon {
     position: absolute;
-    left: 149px;  /* располагаем ближе к правому краю контейнера */
+    left: 210px;  /* располагаем ближе к правому краю контейнера */
     top: 50%;
     transform: translateY(-50%);
     z-index: 2;
-      color: red;            /* красный цвет */
+      color: grey;
+              width: 22px;        /* уменьшили размер */
+  height: 22px;
   font-family: Arial, sans-serif; /* задаем шрифт, который позволит менять цвет */
     display: none;  /* по умолчанию скрыт, будет показан через JS, если в поле есть текст */
     transition: none; /* отключаем анимацию */
@@ -815,13 +839,39 @@ footer {
 @media (max-width: 400px) {
   .clear-icon {
     position: absolute;
-    left: 125px;  /* располагаем ближе к правому краю контейнера */
+    left: 180px;  /* располагаем ближе к правому краю контейнера */
     top: 50%;
+
     transform: translateY(-50%);
     z-index: 2;
-      color: red;            /* красный цвет */
+            width: 22px;        /* уменьшили размер */
+  height: 22px;/* запрет выделения текста */
+      color: grey;
   font-family: Arial, sans-serif; /* задаем шрифт, который позволит менять цвет */
     display: none;  /* по умолчанию скрыт, будет показан через JS, если в поле есть текст */
     transition: none; /* отключаем анимацию */
   }
 }
+
+@media (max-width: 768px) {
+  .menu-links-container {
+    display: none !important;
+  }
+}
+
+@media (max-width: 400px) {
+  .menu-links-container {
+    display: none !important;
+  }
+}
+@-webkit-keyframes gradient {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+@keyframes gradient {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
