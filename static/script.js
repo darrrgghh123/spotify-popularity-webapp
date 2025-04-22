@@ -305,43 +305,52 @@ async function loadDiscography(artist_id, releaseTypes = "album") {
 
 
 function drawAlbumChart(albums) {
-  // Сортируем по убыванию популярности (наибольшая популярность первой)
-  const sorted = albums.slice().sort((a, b) => b.popularity - a.popularity);
-  // Формируем массив названий альбомов; при горизонтальном графике,
-  // чтобы самый популярный был сверху, оставляем сортировку,
-  // но далее задаем yaxis.autorange: "reversed"
-  const names = sorted.map(a => `${a.name} (${a.release_year})`);
-  const pops = sorted.map(a => a.popularity);
+  // 1) Определяем префикс по window.settings.types
+  let prefix;
+  const types = window.settings.types; // ["album"], ["single"], ["album","single"], …
+  if (types.includes("album") && types.includes("single")) {
+    prefix = "Discography Popularity";
+  } else if (types.includes("single")) {
+    prefix = "Singles Popularity";
+  } else {
+    prefix = "Album Popularity";
+  }
 
-  // Тема графика для тёмного оформления, с чуть более светлым фоном:
+  // 2) Формируем полный текст заголовка
+  const titleText = selectedArtistName
+    ? `${prefix} — ${selectedArtistName}`
+    : prefix;
+
+  // 3) Строим сам график, подставляя titleText вместо статичного "Album Popularity"
+  const sorted = albums.slice().sort((a, b) => b.popularity - a.popularity);
+  const names = sorted.map(a => `${a.name} (${a.release_year})`);
+  const pops  = sorted.map(a => a.popularity);
+
   const darkTheme = {
-    // Измените здесь для светлого фона графика
-    paper_bgcolor: "#222222", // Фон всей области графика
-    plot_bgcolor: "#222222",  // Фон области рисования графика
+    paper_bgcolor: "#222222",
+    plot_bgcolor:  "#222222",
     font: { color: "#FFFFFF" },
     xaxis: {
-      gridcolor: "#333333", // Цвет линий сетки по оси x
+      gridcolor: "#333333",
       tickfont: { color: "#FFFFFF", size: 12 },
       title: { text: "Popularity", font: { color: "#FFFFFF", size: 12 } }
     },
     yaxis: {
-      gridcolor: "#333333", // Цвет линий сетки по оси y
+      gridcolor: "#333333",
       tickfont: { color: "#FFFFFF", size: 12 },
-      autorange: "reversed" // Обеспечивает, что самый популярный элемент окажется сверху
+      autorange: "reversed"
     },
     margin: { t: 50, l: 300 }
   };
 
-  Plotly.newPlot("album-chart", [{
-    type: "bar",
-    x: pops,
-    y: names,
-    orientation: "h",
-    marker: { color: "#1DB954" }
-  }], Object.assign({
-    title: selectedArtistName ? `Album Popularity — ${selectedArtistName}` : "Album Popularity"
-  }, darkTheme), { responsive: true });
+  Plotly.newPlot(
+    "album-chart",
+    [{ type: "bar", x: pops, y: names, orientation: "h", marker: { color: "#1DB954" } }],
+    Object.assign({ title: titleText }, darkTheme),
+    { responsive: true }
+  );
 }
+
 
 
 

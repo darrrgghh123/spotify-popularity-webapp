@@ -27,21 +27,24 @@ html, body {
    flex: 1;
    display: flex;          /* если нужно для выравнивания внутрянки */
    flex-direction: column;
+   transition: opacity 0.7s ease;
  }
 
 /* === Welcome Screen === */
 #welcome-screen {
-  height: 100vh;
-  max-height: 100vh;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
   flex-direction: column;
   text-align: center;
-  padding: 0;
-  margin: 0;
   transition: all 1.2s ease;
+  overflow-y: hidden;
   overflow: hidden;
+
 }
 
 
@@ -71,7 +74,7 @@ html, body {
 .fade-out {
   opacity: 0;
   transform: scale(0.95);
-  transition: all 1.2s ease;
+  transition: all 0.6s ease;
   pointer-events: none;
 }
 .invisible {
@@ -82,12 +85,6 @@ html, body {
 .visible {
   opacity: 1;
   pointer-events: auto;
-  transition: all 1.2s ease;
-}
-#app-interface.invisible,
-#raw-data-screen.invisible,
-#settings-screen.invisible {
-  display: none !important;
 }
 
 /* (Опционально) прячем menu-bar при invisible */
@@ -104,7 +101,7 @@ html, body {
   align-items: center;
   width: 100%;
   padding-top: 100px;
-  transition: opacity 1.2s ease;
+  transition: opacity 0.6s ease;
 }
 
 /* === Menu === */
@@ -568,8 +565,8 @@ display: none;         /* JS покажет после старта */
   position: absolute;
   top: 110%;
   left: 0;
-  width: 500px;
-  background: rgba(0, 0, 0, 0.8);
+  width: 94%;
+  max-width: 500px;
   border: 1px solid #ffffff22;
   border-radius: 8px;
   z-index: 1000;
@@ -590,19 +587,19 @@ display: none;         /* JS покажет после старта */
 }
 
 #menu-bar input {
-  padding: 10px;                /* немного увеличим отступы */
+  padding: 10px;
   font-size: 1em;
-  width: 500px;                 /* можно увеличить, если нужно */
-  background: rgba(128, 128, 128, 0.5);  /* серый прозрачный фон */
-  border: 1px solid rgba(255, 255, 255, 0.3); /* тонкая беловатая рамка (по желанию) */
-  color: white;                 /* цвет текста – белый, чтобы читалось на темном фоне */
+  width: 500px;
+  background: rgba(128, 128, 128, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
   border-radius: 6px;
-  outline: none;                /* убираем стандартную обводку при фокусе */
+  outline: none;
   padding-right: 40px;
 }
 
 #menu-bar input::placeholder {
-  color: rgba(204, 204, 204, 1); /* Цвет для #CCCCCC, как пример */
+  color: rgba(204, 204, 204, 1);
 }
 
 
@@ -633,7 +630,7 @@ display: none;         /* JS покажет после старта */
 /* Выравнивание блоков */
 .panel-block,
 .chart-block {
- min-height: 300px; /* или сколько тебе визуально нравится */
+ min-height: 300px;
   width: 100%;
   background-color: rgba(0,0,0,0.25);
   border-radius: 10px;
@@ -641,7 +638,7 @@ display: none;         /* JS покажет после старта */
   margin-bottom: 20px;
 }
 .chart-block h3 {
-  margin: 0 0 8px; /* сверху 0, снизу 8px */
+  margin: 0 0 8px;
 }
 
 #album-chart,
@@ -658,6 +655,7 @@ display: none;         /* JS покажет после старта */
   max-height: 500px;
   overflow-y: auto;
 }
+
 /* Стилизация чекбоксов в Settings */
 .filter-key {
   -webkit-appearance: none;
@@ -733,7 +731,7 @@ display: none;         /* JS покажет после старта */
 /* Мобильный оверлей меню */
 #mobile-menu {
   position: fixed;
-  top: 60px;      /* задайте значение, равное высоте вашей панели меню */
+  top: 60px;
   left: 0;
   right: 0;
   background: rgba(0, 0, 0, 0.8);
@@ -771,14 +769,21 @@ display: none;         /* JS покажет после старта */
 }
 
 /* Медиа-запрос для мобильных устройств */
-@media (max-width: 768px) {
-  /* Скрываем десктопные элементы и показываем мобильные */
-  .desktop-only {
-    display: none;
-  }
-  .mobile-only {
-    display: block;
-  }
+/* мобилька — только узкие телефоны до 600px */
+@media (max-width: 600px) {
+  .menu-links-container { display: none !important; }
+
+  .desktop-only { display: none !important; }
+  .mobile-only  { display: block !important; }
+
+}
+
+/* планшеты (601px и выше) и десктоп — десктопный интерфейс */
+@media (min-width: 601px) {
+  .desktop-only { display: flex !important; }
+  .mobile-only  { display: none !important; }
+}
+
 
   /* Сброс стилей для чекбоксов на стандартные */
   .filter-key,
@@ -853,15 +858,20 @@ display: none;         /* JS покажет после старта */
   }
 }
 
-@media (max-width: 768px) {
-  .menu-links-container {
-    display: none !important;
-  }
-}
 
-@media (max-width: 400px) {
-  .menu-links-container {
-    display: none !important;
+@media (max-width: 200px) {
+  .clear-icon {
+    position: absolute;
+    top: 50%;
+
+    transform: translateY(-50%);
+    z-index: 2;
+            width: 22px;        /* уменьшили размер */
+  height: 22px;/* запрет выделения текста */
+      color: grey;
+  font-family: Arial, sans-serif; /* задаем шрифт, который позволит менять цвет */
+    display: none;  /* по умолчанию скрыт, будет показан через JS, если в поле есть текст */
+    transition: none; /* отключаем анимацию */
   }
 }
 @-webkit-keyframes gradient {
