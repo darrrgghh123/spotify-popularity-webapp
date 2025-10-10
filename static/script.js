@@ -85,6 +85,24 @@ searchInput.addEventListener("input", function() {
       }
     }
   });
+    // === Export: controls ===
+  const expOrder = document.getElementById("export-order");
+  const expRange = document.getElementById("export-range");
+  const expCount = document.getElementById("export-count");
+  const expBtn   = document.getElementById("export-download");
+
+  if (expOrder) {
+    expOrder.addEventListener("change", () => updateExportPreviewCount());
+  }
+  if (expRange) {
+    expRange.addEventListener("input", () => {
+      expCount.textContent = expRange.value;
+    });
+  }
+  if (expBtn) {
+    expBtn.addEventListener("click", exportToCsv);
+  }
+
   // Обработчики для чекбоксов "To Filter Out"
 const filterCheckboxes = document.querySelectorAll(".filter-key");
 const selectAll = document.getElementById("select-all-filters");
@@ -469,18 +487,20 @@ function formatRawData() {
 
 /* Обновляем функцию showRawData, чтобы выводить отформатированный текст */
 function showRawData() {
-  const rawDataScreen = document.getElementById("raw-data-screen");
+  const rawDataScreen  = document.getElementById("raw-data-screen");
   const settingsScreen = document.getElementById("settings-screen");
-  const appInterface = document.getElementById("app-interface");
+  const aboutScreen    = document.getElementById("about-screen");
+  const exportScreen   = document.getElementById("export-screen");
+  const appInterface   = document.getElementById("app-interface");
 
-  // Скрываем экран настроек, если он виден
-  if (settingsScreen.style.display !== "none") {
-    settingsScreen.classList.remove("visible");
-    settingsScreen.classList.add("invisible");
-    setTimeout(() => {
-      settingsScreen.style.display = "none";
-    }, 1200);
-  }
+  // Скрываем Export, Settings и About, если видны
+  [settingsScreen, aboutScreen, exportScreen].forEach(screen => {
+    if (screen && screen.style.display !== "none") {
+      screen.classList.remove("visible");
+      screen.classList.add("invisible");
+      setTimeout(() => { screen.style.display = "none"; }, 1200);
+    }
+  });
 
   appInterface.classList.remove("visible");
   appInterface.classList.add("invisible");
@@ -492,11 +512,12 @@ function showRawData() {
     rawDataScreen.classList.remove("invisible");
     rawDataScreen.classList.add("visible");
 
-    // Заполнение Raw Data текстом
     const rawText = document.getElementById("raw-data-text");
     rawText.textContent = formatRawData();
   }, 1200);
 }
+
+
 
 function goBack() {
   const rawDataScreen = document.getElementById("raw-data-screen");
@@ -518,20 +539,101 @@ function goBack() {
   }, 1200);
 }
 
+function showAbout() {
+  const aboutScreen    = document.getElementById("about-screen");
+  const settingsScreen = document.getElementById("settings-screen");
+  const rawDataScreen  = document.getElementById("raw-data-screen");
+  const exportScreen   = document.getElementById("export-screen");
+  const appInterface   = document.getElementById("app-interface");
+
+  // Скрываем Export, Raw Data и Settings, если открыты
+  [settingsScreen, rawDataScreen, exportScreen].forEach(screen => {
+    if (screen && screen.style.display !== "none") {
+      screen.classList.remove("visible");
+      screen.classList.add("invisible");
+      setTimeout(() => { screen.style.display = "none"; }, 1200);
+    }
+  });
+
+  appInterface.classList.remove("visible");
+  appInterface.classList.add("invisible");
+
+  setTimeout(() => {
+    appInterface.style.display = "none";
+    aboutScreen.style.display = "flex";
+    void aboutScreen.offsetWidth;
+    aboutScreen.classList.remove("invisible");
+    aboutScreen.classList.add("visible");
+  }, 1200);
+}
+
+
+function getFilteredAlbums() {
+  if (!discographyData || !discographyData.albums) return [];
+
+  // типы (album/single)
+  let albums = discographyData.albums.filter(a => {
+    return a.album_type ? window.settings.types.includes(a.album_type.toLowerCase()) : true;
+  });
+
+  // фильтры по словам
+  if (window.settings.filters && window.settings.filters.length > 0) {
+    albums = albums.filter(a => {
+      const low = a.name.toLowerCase();
+      return !window.settings.filters.some(f => low.includes(f.toLowerCase()));
+    });
+  }
+  return albums;
+}
+
+function showExport() {
+  const exportScreen  = document.getElementById("export-screen");
+  const settingsScreen = document.getElementById("settings-screen");
+  const rawDataScreen  = document.getElementById("raw-data-screen");
+  const aboutScreen    = document.getElementById("about-screen");
+  const appInterface   = document.getElementById("app-interface");
+
+  // закрыть остальные
+  [settingsScreen, rawDataScreen, aboutScreen].forEach(screen => {
+    if (screen && screen.style.display !== "none") {
+      screen.classList.remove("visible");
+      screen.classList.add("invisible");
+      setTimeout(() => { screen.style.display = "none"; }, 1200);
+    }
+  });
+
+  // спрятать главный интерфейс
+  appInterface.classList.remove("visible");
+  appInterface.classList.add("invisible");
+
+  setTimeout(() => {
+    appInterface.style.display = "none";
+    exportScreen.style.display = "flex";
+    void exportScreen.offsetWidth;
+    exportScreen.classList.remove("invisible");
+    exportScreen.classList.add("visible");
+
+    // обновить контролы в зависимости от наличия данных
+    updateExportControls();
+  }, 1200);
+}
+
+
 function showSettings() {
   const settingsScreen = document.getElementById("settings-screen");
-  const rawDataScreen = document.getElementById("raw-data-screen");
-  const appInterface = document.getElementById("app-interface");
+  const rawDataScreen  = document.getElementById("raw-data-screen");
+  const aboutScreen    = document.getElementById("about-screen");
+  const exportScreen   = document.getElementById("export-screen");
+  const appInterface   = document.getElementById("app-interface");
 
-  // Скрываем экран Raw Data, если он виден
-  if (rawDataScreen.style.display !== "none") {
-    rawDataScreen.classList.remove("visible");
-    rawDataScreen.classList.add("invisible");
-    setTimeout(() => {
-      rawDataScreen.style.display = "none";
-    }, 1200);
-  }
-
+  // Скрываем Raw Data, About и Export, если видны
+  [rawDataScreen, aboutScreen, exportScreen].forEach(screen => {
+    if (screen && screen.style.display !== "none") {
+      screen.classList.remove("visible");
+      screen.classList.add("invisible");
+      setTimeout(() => { screen.style.display = "none"; }, 1200);
+    }
+  });
 
   appInterface.classList.remove("visible");
   appInterface.classList.add("invisible");
@@ -544,6 +646,8 @@ function showSettings() {
     settingsScreen.classList.add("visible");
   }, 1200);
 }
+
+
 
 
 function closeSettings() {
@@ -607,6 +711,8 @@ function applySettings() {
 
   // Обновляем график альбомов
   drawAlbumChart(filteredAlbums);
+  // синхронизируем панель экспорта
+  updateExportControls();
 
   // Обновляем график треков для выбранного альбома
   if (selectedAlbum) {
@@ -630,6 +736,135 @@ function applySettings() {
   }
 }
 
+function updateExportControls() {
+  const emptyMsg = document.getElementById("export-empty");
+  const controls = document.getElementById("export-controls");
+  const expRange = document.getElementById("export-range");
+  const expCount = document.getElementById("export-count");
+
+  const albums = getFilteredAlbums();
+
+  if (!discographyData || albums.length === 0) {
+    if (emptyMsg)   emptyMsg.style.display = "block";
+    if (controls)   controls.classList.add("hidden");
+    return;
+  }
+
+  if (emptyMsg) emptyMsg.style.display = "none";
+  if (controls) controls.classList.remove("hidden");
+
+  // настроим слайдер
+  const maxVal = Math.max(1, albums.length);
+  expRange.max = String(maxVal);
+  expRange.min = "1";
+  expRange.step = "1";
+  expRange.value = String(maxVal);
+  expCount.textContent = String(maxVal);
+}
+
+function updateExportPreviewCount() {
+  const expCount = document.getElementById("export-count");
+  const expRange = document.getElementById("export-range");
+  if (expCount && expRange) expCount.textContent = expRange.value;
+}
+
+function exportToCsv() {
+  const expOrder = document.getElementById("export-order").value; // 'asc' or 'desc'
+  const expRange = parseInt(document.getElementById("export-range").value, 10);
+
+  let albums = getFilteredAlbums();
+  if (albums.length === 0) return;
+
+  // сортировка по популярности
+  albums.sort((a, b) => {
+    const diff = (a.popularity || 0) - (b.popularity || 0);
+    return expOrder === "asc" ? diff : -diff;
+  });
+
+  // ограничение количеством
+  albums = albums.slice(0, expRange);
+
+  // сведения об артисте
+  const artistName = (discographyData.artist && discographyData.artist.name) || selectedArtistName || "";
+  const followers  = discographyData.artist?.followers?.total ?? "";
+  const genres     = (discographyData.artist?.genres && discographyData.artist.genres.length > 0)
+                     ? discographyData.artist.genres.join("; ")
+                     : "";
+
+  // заголовки
+  const baseHeaders = [
+    "Artist","Followers","Genres",
+    "Release Type","Release Name","Release Date","Release ID","Popularity Score"
+  ];
+
+  // Если выбран альбом — добавим трековые колонки
+  const addTracks = !!(selectedAlbum && selectedAlbum.tracks && selectedAlbum.tracks.length > 0);
+  const trackHeaders = addTracks ? ["Selected Release","Track","Track ID","Track Score"] : [];
+  const headers = baseHeaders.concat(trackHeaders);
+
+  const rows = [];
+
+  // строки по релизам
+  albums.forEach(a => {
+    const row = [
+      artistName,
+      followers,
+      genres,
+      a.album_type || "",
+      a.name || "",
+      a.release_date || "",
+      a.id || "",
+      a.popularity ?? ""
+    ];
+    // для «общих» релизов — дополнит. трековые поля пусты
+    if (addTracks) row.push("", "", "", "");
+    rows.push(row);
+  });
+
+  // если выбранный релиз есть — добавим строки по его трекам
+  if (addTracks) {
+    const albumName = selectedAlbum.name;
+    (selectedAlbum.tracks || []).forEach(t => {
+      rows.push([
+        artistName,
+        followers,
+        genres,
+        selectedAlbum.album_type || "album",
+        selectedAlbum.name || "",
+        selectedAlbum.release_date || "",
+        selectedAlbum.id || "",
+        selectedAlbum.popularity ?? "",
+        albumName || "",
+        t.name || "",
+        t.id || "",
+        t.popularity ?? ""
+      ]);
+    });
+  }
+
+  // CSV: экранирование
+  const esc = v => {
+    const s = (v === null || v === undefined) ? "" : String(v);
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
+  };
+
+  const csv = [headers.map(esc).join(",")]
+    .concat(rows.map(r => r.map(esc).join(",")))
+    .join("\n");
+
+  // скачать в браузере
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  const stamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,"-");
+  a.href = url;
+  a.download = `${(artistName || "discography").replace(/\s+/g,"_")}_export_${stamp}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 
 function closeSettings() {
   const settingsScreen = document.getElementById("settings-screen");
@@ -651,22 +886,20 @@ function closeSettings() {
   }, 1200);
 }
 function goToMain() {
-  const raw = document.getElementById("raw-data-screen");
+  const raw      = document.getElementById("raw-data-screen");
   const settings = document.getElementById("settings-screen");
-  const app = document.getElementById("app-interface");
+  const about    = document.getElementById("about-screen");
+  const exportSc = document.getElementById("export-screen");
+  const app      = document.getElementById("app-interface");
 
-  // Если какой-либо из экранов открыт, плавно скрываем его
-  [raw, settings].forEach(screen => {
-    if (screen.style.display !== "none") {
+  [raw, settings, about, exportSc].forEach(screen => {
+    if (screen && screen.style.display !== "none") {
       screen.classList.remove("visible");
       screen.classList.add("invisible");
-      setTimeout(() => {
-        screen.style.display = "none";
-      }, 1200);
+      setTimeout(() => { screen.style.display = "none"; }, 1200);
     }
   });
 
-  // После завершения анимации показываем главный интерфейс
   setTimeout(() => {
     app.style.display = "flex";
     void app.offsetWidth;
@@ -674,6 +907,8 @@ function goToMain() {
     app.classList.add("visible");
   }, 1200);
 }
+
+
 // Функция сброса настроек к значениям по умолчанию
 function resetSettingsToDefault() {
   // Сброс объекта настроек

@@ -33,6 +33,8 @@
   <div class="menu-links-container desktop-only">
     <span class="menu-link" onclick="showRawData()">Raw Data</span>
     <span class="menu-link" onclick="showSettings()">Settings</span>
+    <span class="menu-link" onclick="showExport()">Export</span>
+    <span class="menu-link" onclick="showAbout()">About</span>
     <span class="menu-link" onclick="window.open('https://extreme-vocal-techniques-db.onrender.com', '_blank')"><i>EMVT Database</i></span>
   </div>
 
@@ -47,6 +49,8 @@
   <div class="mobile-menu-content">
     <a href="javascript:void(0)" class="mobile-menu-link" onclick="mobileMenuLinkClicked(); showRawData();">Raw Data</a>
 <a href="javascript:void(0)" class="mobile-menu-link" onclick="mobileMenuLinkClicked(); showSettings();">Settings</a>
+    <a href="javascript:void(0)" class="mobile-menu-link" onclick="mobileMenuLinkClicked(); showExport();">Export</a>
+    <a href="javascript:void(0)" class="mobile-menu-link" onclick="mobileMenuLinkClicked(); showAbout();">About</a>
 <a href="javascript:void(0)" class="mobile-menu-link" onclick="mobileMenuLinkClicked(); window.open('https://extreme-vocal-techniques-db.onrender.com', '_blank');">EMVT Database</a>
 
   </div>
@@ -96,6 +100,69 @@
     <pre id="raw-data-text"></pre>
   </div>
 </div>
+
+<!-- Export Screen -->
+<div id="export-screen" class="invisible screen">
+  <div class="panel-block export-block">
+    <div class="panel-title">Export Discography</div>
+
+    <!-- Сообщение: ничего не загружено -->
+    <div id="export-empty" class="export-empty">
+      No discography loaded. Please select an artist first.
+    </div>
+
+    <!-- Управляющие элементы экспорта -->
+    <div id="export-controls" class="export-controls hidden">
+      <div class="export-row">
+        <label for="export-order"><b>Order by popularity:</b></label>
+        <select id="export-order">
+          <option value="desc" selected>Descending</option>
+          <option value="asc">Ascending</option>
+        </select>
+      </div>
+
+      <div class="export-row">
+        <label for="export-range"><b>Number of releases:</b></label>
+        <div class="range-wrap">
+          <input type="range" id="export-range" min="1" max="1" step="1" value="1" />
+          <span id="export-count" class="range-count">1</span>
+        </div>
+        <div class="export-hint">Max equals loaded releases after filters.</div>
+      </div>
+
+      <button id="export-download" class="export-btn">Export as .csv</button>
+      <div class="export-note">
+        If a release is selected (tracks are shown on the right), the CSV will also include per-track rows for that album.
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- About Screen -->
+<div id="about-screen" class="invisible screen">
+  <div class="panel-block about-block">
+    <div class="panel-title">Thanks for using the Spotty5 Popularity Analyzer!</div>
+    <div class="about-content">
+      <p><b>What it is:</b> a web application for analyzing artist popularity on Spotify.</p>
+      <p><b>How to use:</b> type an artist’s name, select them from the list, then click on an album to view its tracks and charts.</p>
+      <p><b>Main features:</b></p>
+<ul>
+  <li>Use dynamic search bar to look for artists and select from matching results</li>
+  <li>Load full discography or use flexible filters to sort out release types — albums, singles and popularity scores</li>
+  <li>View Spotify popularity metrics of releases and individual tracks</li>
+  <li>Interactive visualizations for albums and tracks</li>
+  <li>Flexible filters by release types</li>
+  <li>Raw Data screen with structured API output</li>
+  <li>Export loaded discography as a .csv file with customizable order and range</li>
+</ul>
+      <p><i></i></p>
+      <p><i>© 2025 Alexey Voronin • Designed for researchers & music lovers.</i></p>
+    </div>
+  </div>
+</div>
+
+
 
 <!-- Settings Screen -->
 <div id="settings-screen" class="invisible screen">
