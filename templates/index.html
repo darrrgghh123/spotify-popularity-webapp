@@ -127,12 +127,11 @@
           <input type="range" id="export-range" min="1" max="1" step="1" value="1" />
           <span id="export-count" class="range-count">1</span>
         </div>
-        <div class="export-hint">Max equals loaded releases after filters.</div>
       </div>
 
       <button id="export-download" class="export-btn">Export as .csv</button>
       <div class="export-note">
-        If a release is selected (tracks are shown on the right), the CSV will also include per-track rows for that album.
+        If a release is selected, the CSV will also include per-track rows for that album.
       </div>
     </div>
   </div>
@@ -142,7 +141,11 @@
 <!-- About Screen -->
 <div id="about-screen" class="invisible screen">
   <div class="panel-block about-block">
-    <div class="panel-title">Thanks for using the Spotty5 Popularity Analyzer!</div>
+<div class="panel-title">
+  Thanks for using the
+  <img src="/static/logo.ico" alt="Spotty5 logo" class="about-logo">
+  Popularity Analyzer!
+</div>
     <div class="about-content">
       <p><b>What it is:</b> a web application for analyzing artist popularity on Spotify.</p>
       <p><b>How to use:</b> type an artist’s name, select them from the list, then click on an album to view its tracks and charts.</p>

@@ -1051,3 +1051,14 @@ footer .footer-link {
   .export-controls label { min-width: 140px; }
   .range-wrap { max-width: 100%; }
 }
+
+
+/* === About Screen Logo === */
+.about-logo {
+  height: 32px;          /* регулируй размер под общий шрифт */
+  width: auto;
+  vertical-align: middle; /* выравнивание по тексту */
+  margin: 0 6px;          /* отступы справа и слева */
+  border-radius: 4px;     /* легкое скругление, чтобы не выглядело резким */
+  display: inline-block;
+}
