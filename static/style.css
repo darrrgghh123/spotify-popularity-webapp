@@ -289,6 +289,29 @@ button:hover {
   display: none;
 }
 
+/* мини-элементы в dropdown */
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dropdown-item .avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  background-size: cover;
+  background-position: center;
+  background-color: rgba(255,255,255,0.08); /* если нет картинки */
+  flex: 0 0 28px;
+}
+.dropdown-item .name {
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px; /* можно подправить в зависимости от ширины инпута */
+}
+
 /* === List Items === */
 ul {
   list-style: none;
@@ -343,13 +366,16 @@ li.selected {
   font-weight: bold;
   color: #fff;
   z-index: 2000;
-  animation: pulse 1s infinite;
+  animation: pulse 1.5s infinite;
+  opacity: 0;
+  transition: opacity 1s ease; /* плавное появление/исчезновение */
+
 }
 
 @keyframes pulse {
-  0% { opacity: 0.3; }
+  0% { opacity: 0.1; }
   50% { opacity: 1; }
-  100% { opacity: 0.3; }
+  100% { opacity: 0.1; }
 }
 
 
@@ -376,6 +402,12 @@ footer .footer-link {
   border-bottom: 1px dashed #aaa;
   transition: border-bottom 0.18s, color 0.18s;
 }
+footer .footer-link:hover {
+  color: #1DB954;
+  border-bottom-color: #1DB954;
+}
+
+
 
 
 
@@ -1061,4 +1093,17 @@ footer .footer-link {
   margin: 0 6px;          /* отступы справа и слева */
   border-radius: 4px;     /* легкое скругление, чтобы не выглядело резким */
   display: inline-block;
+}
+
+/* --- Make footer-link inside About look identical to footer version --- */
+#about-screen .footer-link {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px dashed #aaa;
+  transition: border-bottom 0.18s, color 0.18s;
+}
+
+#about-screen .footer-link:hover {
+  color: #1DB954;
+  border-bottom-color: #1DB954;
 }

@@ -1,4 +1,30 @@
 
+const BLINKS_PER_PHRASE = 5;
+
+let loaderBlinkCount = 0;
+let loaderMode = 'start';           // 'start' -> сначала базовая фраза, далее 'facts'
+let lastFactIndex = -1;
+let loaderHandlerBound = null;      // чтобы корректно снимать слушатель
+
+
+// loader phrases!
+  const loaderPhrases = [
+  "Loading discography, please hold on...",
+  "Still fetching albums... Spotify servers might be busy",
+  "The Beatles hold the record for most #1 hits",
+  "Spotify launched on October 7, 2008",
+  "The most-streamed artist of all time is Drake",
+  "Billie Eilish was only 17 when she won her first Grammy",
+  "You can sort albums by popularity once loaded",
+  "Metallica was the first band to play on all seven continents",
+  "The longest song on Spotify lasts over 13 hours!",
+  "Hang tight — good music takes time to load!",
+  "The shortest charting song ever is 36 seconds long",
+  "Queen’s 'Bohemian Rhapsody' has no chorus — and still became a hit",
+  "The first ever streamed song on Spotify was 'Humble' by Muse",
+  "You can filter out releases you don't need in Settings",
+  "The most followed playlist on Spotify is 'Today’s Top Hits'"
+];
   // Если глобальный объект settings ещё не создан, создаём его
 window.settings = window.settings || {
   types: ["album"],
@@ -85,6 +111,10 @@ searchInput.addEventListener("input", function() {
       }
     }
   });
+
+
+
+
     // === Export: controls ===
   const expOrder = document.getElementById("export-order");
   const expRange = document.getElementById("export-range");
@@ -269,19 +299,44 @@ async function searchArtist() {
 }
 
 
-function updateArtistImage(artistId) {
+function setArtistImageUrl(url) {
   const imgContainer = document.getElementById("artist-image-container");
   imgContainer.innerHTML = '<div class="panel-title">Artist\'s Image</div>';
-
-  const imageUrl = artistImages[artistId];
-  if (imageUrl) {
+  if (url) {
     const img = document.createElement("img");
-    img.src = imageUrl;
+    img.src = url;
     img.alt = "Artist";
     img.classList.add("artist-image");
     imgContainer.appendChild(img);
   }
 }
+
+
+// ЗАМЕНИ СУЩЕСТВУЮЩУЮ updateArtistImage НА ЭТУ
+function updateArtistImage(artistId) {
+  const imgContainer = document.getElementById("artist-image-container");
+  imgContainer.innerHTML = '<div class="panel-title">Artist\'s Image</div>';
+
+  // 1) пробуем достать hi-res из загруженной дискографии
+  let hiResUrl = null;
+  if (discographyData && discographyData.artist && Array.isArray(discographyData.artist.images) && discographyData.artist.images.length > 0) {
+    // как правило, Spotify отдаёт самый большой первым
+    hiResUrl = discographyData.artist.images[0]?.url || null;
+  }
+
+  // 2) если hi-res ещё не доступен — используем маленький thumbnail из поиска
+  const fallbackThumb = artistImages[artistId] || null;
+
+  const finalUrl = hiResUrl || fallbackThumb;
+  if (finalUrl) {
+    const img = document.createElement("img");
+    img.src = finalUrl;
+    img.alt = "Artist";
+    img.classList.add("artist-image");
+    imgContainer.appendChild(img);
+  }
+}
+
 
 async function loadDiscography(artist_id, releaseTypes = "album") {
   showLoading(true);
@@ -294,6 +349,8 @@ async function loadDiscography(artist_id, releaseTypes = "album") {
   showLoading(false);
 
   discographyData = data;
+ updateArtistImage(selectedArtistId);
+
   selectedAlbum = null;
   const albumList = document.getElementById("album-list");
   albumList.innerHTML = "";
@@ -409,10 +466,80 @@ function drawTrackChart(album) {
 }
 
 
+let loaderInterval = null;
+let phraseIndex = 0;
+
 function showLoading(show) {
   const spinner = document.getElementById("loader");
-  spinner.style.display = show ? "block" : "none";
+
+  // помощники
+  const baseText = "Loading discography, please hold on...";
+  const factsPool = (Array.isArray(loaderPhrases) ? loaderPhrases : [])
+    // из пула для фактов убираем базовую фразу(ы), если вдруг есть похожие
+    .filter(p => p.toLowerCase().indexOf("loading discography") === -1);
+
+  // подобрать новый факт, не повторяя предыдущий подряд
+  function pickNextFact() {
+    if (!factsPool.length) return baseText;
+    let idx;
+    do {
+      idx = Math.floor(Math.random() * factsPool.length);
+    } while (factsPool.length > 1 && idx === lastFactIndex);
+    lastFactIndex = idx;
+    return factsPool[idx];
+  }
+
+  // обработчик одного полного цикла анимации (одно мигание)
+  function onBlink() {
+    loaderBlinkCount++;
+    if (loaderBlinkCount >= BLINKS_PER_PHRASE) {
+      loaderBlinkCount = 0;
+
+      if (loaderMode === 'start') {
+        loaderMode = 'facts';
+        spinner.textContent = pickNextFact();
+      } else {
+        spinner.textContent = pickNextFact();
+      }
+    }
+  }
+
+  if (show) {
+    // показать и инициализировать
+    spinner.style.display = "block";
+    spinner.style.opacity = "0";              // начнём с нуля и дадим анимации войти
+    spinner.textContent = baseText;
+    loaderBlinkCount = 0;
+    loaderMode = 'start';
+
+    // перевесим слушатель (на всякий случай снимем старый)
+    if (loaderHandlerBound) {
+      spinner.removeEventListener("animationiteration", loaderHandlerBound);
+    }
+    loaderHandlerBound = onBlink;
+    spinner.addEventListener("animationiteration", loaderHandlerBound);
+
+    // быстро выставим видимость (анимация сама погонит мигания)
+    requestAnimationFrame(() => { spinner.style.opacity = "0"; }); // уже 0, но пусть зафиксируется
+  } else {
+    // плавно тушим и чистим состояние
+    spinner.style.transition = "opacity 1s ease";
+    spinner.style.opacity = "0";
+    setTimeout(() => {
+      spinner.style.display = "none";
+      spinner.style.transition = "";
+      loaderBlinkCount = 0;
+      loaderMode = 'start';
+      lastFactIndex = -1;
+      if (loaderHandlerBound) {
+        spinner.removeEventListener("animationiteration", loaderHandlerBound);
+        loaderHandlerBound = null;
+      }
+    }, 1000);
+  }
 }
+
+
 
 
 
@@ -955,6 +1082,51 @@ function debounce(func, delay) {
 // Глобальная переменная для отслеживания выделенного индекса в выпадающем списке
 let dropdownSelectedIndex = -1;
 
+
+
+// ДОБАВЬ ВВЕРХ (рядом с levenshtein):
+function normalizeStr(s) {
+  return s
+    .toLowerCase()
+    .normalize("NFKD")                 // диакритика -> базовые символы
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/&/g, " and ")
+    .replace(/\$/g, "s")
+    .replace(/[^\w\s]+/g, " ")         // пунктуация в пробел
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+// Счёт по словам: суммируем минимальные расстояния от каждого q-токена до любого токена имени
+function multiWordScore(name, query) {
+  const n = normalizeStr(name).split(" ");
+  const q = normalizeStr(query).split(" ");
+
+  // если все q-токены входят подстрокой — это «идеальный» матч
+  const allIn = q.every(tok => n.join(" ").includes(tok));
+  if (allIn) return 0;
+
+  let sum = 0;
+  for (const tok of q) {
+    let best = Infinity;
+    for (const w of n) {
+      const d = levenshtein(w, tok);
+      if (d < best) best = d;
+      if (best === 0) break;
+    }
+    sum += best;
+  }
+
+  // Буст за префиксное совпадение целиком
+  const nn = normalizeStr(name);
+  const qq = normalizeStr(query);
+  if (nn.startsWith(qq)) sum = Math.max(0, sum - 2);
+
+  return sum;
+}
+
+
+
 // Функция вычисления расстояния Левенштейна между строками
 function levenshtein(a, b) {
   const matrix = [];
@@ -1006,42 +1178,50 @@ async function doDynamicSearch() {
   });
   const data = await res.json();
 
-  let scoredResults = data.results.map(artist => {
-    const lowerName = artist.name.toLowerCase();
-    const lowerQuery = query.toLowerCase();
-    const score = lowerName.includes(lowerQuery) ? 0 : levenshtein(lowerName, lowerQuery);
-    return { artist, score };
-  });
+  // скорим по словам
+  let scored = data.results.map(a => ({ artist: a, score: multiWordScore(a.name, query) }));
 
-  const threshold = Math.floor(query.length / 2);
-  let results = scoredResults.filter(item => item.score <= threshold);
-  results.sort((a, b) => a.score - b.score);
-  results = results.map(item => item.artist);
+  // мягкий порог: ~0.5 * средняя длина q-токенов * кол-во токенов
+  const qTokens = normalizeStr(query).split(" ");
+  const avgLen = qTokens.reduce((s, t) => s + t.length, 0) / qTokens.length;
+  const threshold = Math.max(2, Math.round(qTokens.length * Math.max(1, avgLen * 0.5)));
+
+  let results = scored
+    .filter(x => x.score <= threshold)
+    .sort((a, b) => a.score - b.score)
+    .map(x => x.artist);
 
   dropdown.innerHTML = "";
 
   if (results.length === 0) {
     const li = document.createElement("li");
     li.textContent = "No matches found";
-    li.classList.add("no-results-message"); // для дополнительной стилизации, если нужно
+    li.classList.add("no-results-message");
     dropdown.appendChild(li);
-    // Показываем dropdown, чтобы сообщение было видно
     dropdown.classList.remove("hidden");
-  } else {
-    results.forEach(artist => {
-      artistImages[artist.id] = artist.image || null;
-      const li = document.createElement("li");
-      li.textContent = artist.name;
-      li.dataset.id = artist.id;
-      li.addEventListener("click", () => {
-        selectArtist(artist);
-      });
-      dropdown.appendChild(li);
-    });
-    dropdown.classList.remove("hidden");
-    dropdownSelectedIndex = -1;
+    return;
   }
+
+  results.forEach(artist => {
+    artistImages[artist.id] = artist.image || null;
+
+    const li = document.createElement("li");
+    li.classList.add("dropdown-item");
+    li.dataset.id = artist.id;
+    // мини-аватар + имя; если картинки нет — квадрат-заглушка через CSS
+    li.innerHTML = `
+      <span class="avatar" ${artist.image ? `style="background-image:url('${artist.image}')"` : ""}></span>
+      <span class="name">${artist.name}</span>
+    `;
+
+    li.addEventListener("click", () => { selectArtist(artist); });
+    dropdown.appendChild(li);
+  });
+
+  dropdown.classList.remove("hidden");
+  dropdownSelectedIndex = -1;
 }
+
 
 
 // Обновлённая функция для выделения пунктов dropdown с автопрокруткой
@@ -1097,22 +1277,34 @@ document.getElementById("artist-input-top").addEventListener("keydown", function
 
 // Функция выбора исполнителя при клике (либо по Enter)
 function selectArtist(artist) {
-  // Обновляем выбранного исполнителя
   selectedArtistId = artist.id;
   selectedArtistName = artist.name;
-  updateArtistImage(artist.id);
+  document.getElementById("artist-input-top").value = artist.name;
 
-  // Скрываем выпадающий список
+  // 1) сразу показываем превью из поиска (мгновенно)
+  if (artist.image) setArtistImageUrl(artist.image);
+
+  // 2) параллельно тянем hi-res и заменяем картинку сразу, не дожидаясь дискографии
+  fetch("/get_artist_info", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ artist_id: artist.id })
+  })
+  .then(r => r.json())
+  .then(info => {
+    const big = (info.images && info.images.length) ? info.images[0].url : null; // обычно 0-й — самый большой
+    if (big) setArtistImageUrl(big);
+  })
+  .catch(() => {}); // тихо игнорируем, если вдруг не пришло
+
+  // 3) скрываем дропдаун и продолжаем обычный флоу
   const dropdown = document.getElementById("dropdown-results");
   dropdown.classList.add("hidden");
   dropdown.innerHTML = "";
   dropdownSelectedIndex = -1;
 
-  // Сбрасываем настройки к значениям по умолчанию и загружаем дискографию
   resetSettingsToDefault();
-  loadDiscography(artist.id);
-
-  // Возвращаем пользователя на главный интерфейс (если он находится на Raw Data или Settings)
+  loadDiscography(artist.id);   // пусть грузится в фоне
   goToMain();
 }
 

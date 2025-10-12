@@ -1,8 +1,11 @@
 import os
 import time
+import re
 from dotenv import load_dotenv
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
+import unicodedata
+
 
 load_dotenv()
 
@@ -18,18 +21,47 @@ sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(
 ))
 
 def get_artist_matches(artist_name):
-    results = sp.search(q=artist_name, type='artist', limit=15)
-    items = results.get("artists", {}).get("items", [])
-    return {
-        "results": [
-            {
+    variants = _query_variants(artist_name)
+    seen_ids = set()
+    collected = []
+
+    for v in variants:
+        # две страницы по 50, чтобы получить до 100 результатов
+        for offset in (0, 50):
+            try:
+                res = sp.search(q=v, type='artist', limit=50, offset=offset)
+            except Exception:
+                continue
+            items = res.get("artists", {}).get("items", []) or []
+            for a in items:
+                aid = a.get("id")
+                if not aid or aid in seen_ids:
+                    continue
+                seen_ids.add(aid)
+                # возьмём самую маленькую картинку (последнюю)
+                img_url = None
+                if a.get("images"):
+                    img_url = a["images"][-1].get("url") or a["images"][0].get("url")
+                collected.append({
+                    "id": aid,
+                    "name": a.get("name", ""),
+                    "image": img_url
+                })
+
+    # если совсем пусто — вернём то, что было бы по исходному запросу
+    if not collected:
+        res = sp.search(q=artist_name, type='artist', limit=15)
+        items = res.get("artists", {}).get("items", []) or []
+        for a in items:
+            img_url = a["images"][-1]["url"] if a.get("images") else None
+            collected.append({
                 "id": a["id"],
                 "name": a["name"],
-                "image": a["images"][0]["url"] if a["images"] else None
-            }
-            for a in items
-        ]
-    }
+                "image": img_url
+            })
+
+    return {"results": collected}
+
 
 
 def get_albums_and_tracks(artist_id, release_types="album"):
@@ -97,3 +129,48 @@ def get_albums_and_tracks(artist_id, release_types="album"):
 
     artist_info = sp.artist(artist_id)
     return {"albums": albums_raw, "artist": artist_info}
+
+def _normalize_ascii(s: str) -> str:
+    # lower + убрать диакритику + оставить только a-z0-9 и пробелы
+    s = s.lower()
+    s = unicodedata.normalize("NFKD", s)
+    s = s.encode("ascii", "ignore").decode("ascii")
+    s = re.sub(r"[^a-z0-9]+", " ", s)
+    return re.sub(r"\s+", " ", s).strip()
+
+def _query_variants(q: str) -> list[str]:
+    base = q.strip()
+    low  = base.lower()
+    variants = {
+        base,
+        low,
+        low.replace("&", " and "),
+        low.replace(".", " "),
+        low.replace("$", "s"),           # $uicideboy$ -> suicideboys
+        re.sub(r"[^\w\s]", " ", low),    # убрать всю пунктуацию
+        _normalize_ascii(low),           # диакритика -> ascii
+    }
+    # Удалить лишние пробелы и пустые
+    cleaned = []
+    for v in variants:
+        vv = re.sub(r"\s+", " ", v).strip()
+        if vv:
+            cleaned.append(vv)
+    # Уникальные в исходном порядке
+    seen, uniq = set(), []
+    for v in cleaned:
+        if v not in seen:
+            uniq.append(v); seen.add(v)
+    return uniq
+
+# spotify_handler.py
+def get_artist_info(artist_id: str):
+    a = sp.artist(artist_id)
+    return {
+        "id": a.get("id"),
+        "name": a.get("name"),
+        "images": a.get("images", []),  # [ {url, width, height}, ...], как правило 0-й — самый большой
+        "followers": a.get("followers", {}),
+        "genres": a.get("genres", []),
+        "popularity": a.get("popularity"),
+    }
