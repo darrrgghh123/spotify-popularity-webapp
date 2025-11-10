@@ -110,11 +110,24 @@ window.addEventListener('scroll', () => {
   if (clearSearchBtn) {
     clearSearchBtn.addEventListener("click", (e) => {
       e.stopPropagation(); // Предотвращаем всплытие события
+      
+      // Сбрасываем выбранного исполнителя при очистке поля
+      selectedArtistId = null;
+      selectedArtistName = "";
+      
+      // Устанавливаем флаг, чтобы предотвратить автоматический поиск при очистке
+      isProgrammaticInputChange = true;
       searchInput.value = "";                // Очищаем поле ввода
       dropdown.classList.add("hidden");      // Скрываем выпадающий список, если он открыт
+      dropdown.innerHTML = "";               // Очищаем содержимое dropdown
+      dropdownSelectedIndex = -1;
       toggleClearButton(false);              // Скрываем крестик
-      // Запускаем событие input для обновления динамического поиска (если требуется)
-      searchInput.dispatchEvent(new Event("input"));
+      
+      // Сбрасываем флаг после задержки (больше чем debounce delay в 300ms)
+      setTimeout(() => {
+        isProgrammaticInputChange = false;
+      }, 350);
+      
       searchInput.focus(); // Возвращаем фокус на поле ввода
     });
   }
@@ -329,6 +342,7 @@ let selectedArtistName = "";
 let artistImages = {};
 let discographyData = null;
 let selectedAlbum = null;
+let isProgrammaticInputChange = false; // Флаг для предотвращения автоматического поиска при программном изменении значения
 
 async function searchArtist() {
   const input = document.getElementById("artist-input-top").value.trim();
@@ -363,10 +377,24 @@ async function searchArtist() {
     selectedArtistId = artist.id;
     selectedArtistName = artist.name;
     updateArtistImage(artist.id);
+    
+    // Скрываем dropdown и очищаем его содержимое сразу
     dropdown.classList.add("hidden");
+    dropdown.innerHTML = "";
+    dropdownSelectedIndex = -1;
+    
+    // Устанавливаем флаг, чтобы предотвратить автоматический поиск
+    isProgrammaticInputChange = true;
+    
     // Обновляем поле поиска и показываем крестик
     const searchInput = document.getElementById("artist-input-top");
     searchInput.value = artist.name;
+    
+    // Сбрасываем флаг после задержки (больше чем debounce delay в 300ms), чтобы событие input успело обработаться
+    setTimeout(() => {
+      isProgrammaticInputChange = false;
+    }, 350);
+    
     const clearSearchBtn = document.getElementById("clear-search");
     if (clearSearchBtn && searchInput.value.trim().length > 0) {
       clearSearchBtn.style.display = "block";
@@ -1359,9 +1387,22 @@ function levenshtein(a, b) {
 
 // Функция обработки динамического поиска с фаззи-поддержкой
 async function doDynamicSearch() {
+  // Если изменение значения программное (при выборе исполнителя), не выполняем поиск
+  if (isProgrammaticInputChange) {
+    return;
+  }
+  
   const inputEl = document.getElementById("artist-input-top");
   const query = inputEl.value.trim();
   const dropdown = document.getElementById("dropdown-results");
+
+  // Если исполнитель уже выбран и значение поля совпадает с именем выбранного исполнителя, не показываем dropdown
+  if (selectedArtistId && query === selectedArtistName) {
+    dropdown.classList.add("hidden");
+    dropdown.innerHTML = "";
+    dropdownSelectedIndex = -1;
+    return;
+  }
 
   if (query.length < 2) {
     dropdown.classList.add("hidden");
@@ -1461,10 +1502,16 @@ document.getElementById("artist-input-top").addEventListener("keydown", function
   } else if (e.key === "Enter") {
     e.preventDefault();
     if (dropdownSelectedIndex >= 0 && dropdownSelectedIndex < items.length) {
+      // Устанавливаем флаг перед кликом, чтобы предотвратить автоматический поиск
+      isProgrammaticInputChange = true;
       items[dropdownSelectedIndex].click();
       dropdown.classList.add("hidden");
       dropdown.innerHTML = "";
       dropdownSelectedIndex = -1;
+      // Сбрасываем флаг после задержки (больше чем debounce delay в 300ms)
+      setTimeout(() => {
+        isProgrammaticInputChange = false;
+      }, 350);
     }
   } else if (e.key === "Escape") {
     dropdown.classList.add("hidden");
@@ -1478,8 +1525,24 @@ document.getElementById("artist-input-top").addEventListener("keydown", function
 function selectArtist(artist) {
   selectedArtistId = artist.id;
   selectedArtistName = artist.name;
+  
+  // Скрываем dropdown и очищаем его содержимое сразу
+  const dropdown = document.getElementById("dropdown-results");
+  dropdown.classList.add("hidden");
+  dropdown.innerHTML = "";
+  dropdownSelectedIndex = -1;
+  
+  // Устанавливаем флаг, чтобы предотвратить автоматический поиск
+  isProgrammaticInputChange = true;
+  
   const searchInput = document.getElementById("artist-input-top");
   searchInput.value = artist.name;
+  
+  // Сбрасываем флаг после небольшой задержки, чтобы событие input успело обработаться
+  setTimeout(() => {
+    isProgrammaticInputChange = false;
+  }, 100);
+  
   // Показываем крестик, так как поле заполнено
   const clearSearchBtn = document.getElementById("clear-search");
   if (clearSearchBtn && searchInput.value.trim().length > 0) {
@@ -1502,12 +1565,6 @@ function selectArtist(artist) {
     if (big) setArtistImageUrl(big);
   })
   .catch(() => {}); // тихо игнорируем, если вдруг не пришло
-
-  // 3) скрываем дропдаун и продолжаем обычный флоу
-  const dropdown = document.getElementById("dropdown-results");
-  dropdown.classList.add("hidden");
-  dropdown.innerHTML = "";
-  dropdownSelectedIndex = -1;
 
   // Сохраняем текущие настройки из чекбоксов перед загрузкой нового исполнителя
   saveCurrentSettings();

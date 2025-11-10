@@ -601,7 +601,7 @@ footer .footer-link:hover {
   top: 0;
   left: 0;
   width: 100%;
-  display: flex;
+  display: flex; /* по умолчанию flex для мобильных */
   justify-content: center;
   align-items: center;
   padding: 16px 16px; /* отступы  */
@@ -610,9 +610,67 @@ footer .footer-link:hover {
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   gap: 8px;  /* расстояние между элементами */
   transition: background 0.3s ease;
+  box-sizing: border-box;
 }
 #menu-bar.scrolled {
   background: rgba(0, 0, 0, 0.5);
+}
+
+/* Стили для десктопных устройств (планшеты и выше) */
+@media (min-width: 601px) {
+  /* Меню с отступами по бокам и использованием grid для центрирования */
+  #menu-bar {
+    padding: 16px 60px; /* увеличиваем боковые отступы для визуального разделения */
+    display: grid;
+    /* Создаем сетку: левый отступ | логотип | центр (поиск) | меню | правый отступ */
+    /* Используем minmax для гибкости на разных размерах экрана */
+    grid-template-columns: minmax(40px, 1fr) auto 500px auto minmax(40px, 1fr);
+    align-items: center;
+    column-gap: 30px; /* расстояние между элементами */
+    max-width: 1800px; /* ограничиваем максимальную ширину меню */
+    margin: 0 auto; /* центрируем меню на странице */
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  /* Логотип размещается во второй колонке */
+  #logo-link {
+    grid-column: 2;
+    justify-self: end; /* выравниваем логотип к правому краю колонки (ближе к поиску) */
+    margin-right: 0;
+  }
+  
+  /* Строка поиска размещается в центральной колонке (500px) */
+  .search-wrapper {
+    grid-column: 3;
+    position: relative;
+    width: 500px; /* фиксированная ширина, как у dropdown */
+    justify-self: center; /* центрируем поиск в колонке */
+    flex: 0 0 500px; /* не растягивается и не сжимается */
+  }
+  
+  /* Поле ввода в строке поиска */
+  .search-wrapper input {
+    width: 100%;
+    padding-right: 32px;
+    box-sizing: border-box;
+  }
+  
+  /* Ссылки меню размещаются в четвертой колонке */
+  .menu-links-container {
+    grid-column: 4;
+    justify-self: start; /* выравниваем меню к левому краю колонки (ближе к поиску) */
+    display: flex;
+    gap: 12px;
+    margin-left: 0;
+    flex-shrink: 0;
+  }
+  
+  /* Мобильное меню (гамбургер) не должно отображаться и не должно занимать место на десктопе */
+  .hamburger {
+    display: none !important;
+    grid-column: none; /* не занимает колонку в grid */
+  }
 }
 
 /* Blur эффект для основного контента при открытом мобильном меню */
@@ -639,6 +697,14 @@ body.mobile-menu-open #export-screen {
   min-width: 0;
   padding-right: 32px; /* место для крестика на всех устройствах */
   box-sizing: border-box;
+}
+
+/* На мобильных строка поиска остается гибкой */
+@media (max-width: 600px) {
+  .search-wrapper {
+    flex: 1;
+    max-width: 100%;
+  }
 }
 /* Стили для красного крестика (clear icon) */
 .clear-icon {
@@ -669,11 +735,19 @@ body.mobile-menu-open #export-screen {
   position: absolute;
   top: 110%;
   left: 0;
-  width: 94%;
-  max-width: 500px;
+  width: 100%; /* на десктопе ширина равна ширине search-wrapper (500px) */
+  max-width: 500px; /* максимальная ширина как у search-wrapper */
   border: 1px solid #ffffff22;
   border-radius: 8px;
   z-index: 1000;
+}
+
+/* На мобильных dropdown имеет меньшую ширину */
+@media (max-width: 600px) {
+  #dropdown-results {
+    width: 100%;
+    max-width: 100%;
+  }
 }
 .dropdown li.no-results-message {
   cursor: default;
@@ -687,19 +761,18 @@ body.mobile-menu-open #export-screen {
   height: 32px;
   cursor: pointer;
   border-radius: 6px;
-   margin-right: 10px;
+  margin-right: 0;
 }
 
+/* Базовые стили для input - будут переопределены в медиа-запросах */
 #menu-bar input {
   padding: 10px;
   font-size: 1em;
-  width: 500px;
   background: rgba(128, 128, 128, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.3);
   color: white;
   border-radius: 6px;
   outline: none;
-  padding-right: 40px;
 }
 
 #menu-bar input::placeholder {
