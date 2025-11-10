@@ -34,6 +34,11 @@ window.settings = window.settings || {
 document.addEventListener("DOMContentLoaded", () => {
  // Задержка появления экрана приветствия (например, 500 мс)
   const welcomeScreen = document.getElementById("welcome-screen");
+  // Блокируем скроллинг body при показе welcome-screen
+  document.body.style.overflow = "hidden";
+  // Инициализируем настройки из чекбоксов при загрузке страницы
+  updateLookForSettings();
+  updateFilterSettings();
   setTimeout(() => {
     welcomeScreen.classList.remove("invisible");
     welcomeScreen.classList.add("visible");
@@ -59,55 +64,122 @@ window.addEventListener('scroll', () => {
   const searchInput = document.getElementById("artist-input-top");
   const clearSearchBtn = document.getElementById("clear-search");
   const dropdown = document.getElementById("dropdown-results");
-clearSearchBtn.style.display = "none";
-// Добавляем обработчик изменения поля ввода,
-// чтобы кнопка очистки появлялась только если что-то введено.
-searchInput.addEventListener("input", function() {
-  if (this.value.trim().length > 0) {
-    clearSearchBtn.style.display = "block";  // Показываем крестик
-  } else {
-    clearSearchBtn.style.display = "none";     // Скрываем, если поле пустое
-  }
-});
+  
+  // Инициализируем видимость крестика
   if (clearSearchBtn) {
-    clearSearchBtn.addEventListener("click", () => {
+    clearSearchBtn.style.display = "none";
+    clearSearchBtn.style.opacity = "0";
+    clearSearchBtn.style.transition = "opacity 0.2s ease";
+  }
+
+  // Функция для показа/скрытия крестика с анимацией
+  function toggleClearButton(show) {
+    if (!clearSearchBtn) return;
+    if (show) {
+      clearSearchBtn.style.display = "block";
+      // Используем requestAnimationFrame для плавной анимации
+      requestAnimationFrame(() => {
+        clearSearchBtn.style.opacity = "1";
+      });
+    } else {
+      clearSearchBtn.style.opacity = "0";
+      // Скрываем после окончания анимации
+      setTimeout(() => {
+        if (clearSearchBtn.style.opacity === "0") {
+          clearSearchBtn.style.display = "none";
+        }
+      }, 200);
+    }
+  }
+
+  // Добавляем обработчик изменения поля ввода,
+  // чтобы кнопка очистки появлялась только если что-то введено.
+  searchInput.addEventListener("input", function() {
+    if (this.value.trim().length > 0) {
+      toggleClearButton(true);  // Показываем крестик с анимацией
+    } else {
+      toggleClearButton(false);     // Скрываем с анимацией, если поле пустое
+    }
+  });
+
+  // Также проверяем при загрузке, если поле уже заполнено (например, при выборе исполнителя)
+  if (searchInput.value.trim().length > 0) {
+    toggleClearButton(true);
+  }
+
+  if (clearSearchBtn) {
+    clearSearchBtn.addEventListener("click", (e) => {
+      e.stopPropagation(); // Предотвращаем всплытие события
       searchInput.value = "";                // Очищаем поле ввода
       dropdown.classList.add("hidden");      // Скрываем выпадающий список, если он открыт
+      toggleClearButton(false);              // Скрываем крестик
       // Запускаем событие input для обновления динамического поиска (если требуется)
       searchInput.dispatchEvent(new Event("input"));
+      searchInput.focus(); // Возвращаем фокус на поле ввода
     });
   }
   // Обработка нажатия на мобильный гамбургер (элемент с id="menu-toggle")
   const menuToggle = document.getElementById("menu-toggle");
   const mobileMenu = document.getElementById("mobile-menu");
   if (menuToggle && mobileMenu) {
+    // Инициализируем меню как скрытое
+    mobileMenu.classList.add("hidden");
+    mobileMenu.classList.remove("show");
+    
     menuToggle.addEventListener("click", (e) => {
       e.stopPropagation(); // чтобы клик не срабатывал в document
-      mobileMenu.classList.toggle("hidden");
+      const isShowing = mobileMenu.classList.contains("show");
+      if (!isShowing) {
+        // Открываем меню
+        mobileMenu.classList.remove("hidden");
+        // Используем requestAnimationFrame для корректной работы анимации
+        requestAnimationFrame(() => {
+          mobileMenu.classList.add("show");
+        });
+        document.body.classList.add("mobile-menu-open");
+      } else {
+        // Закрываем меню
+        mobileMenu.classList.remove("show");
+        document.body.classList.remove("mobile-menu-open");
+        // Убираем класс hidden после окончания анимации
+        setTimeout(() => {
+          if (!mobileMenu.classList.contains("show")) {
+            mobileMenu.classList.add("hidden");
+          }
+        }, 300);
+      }
     });
   }
   window.mobileMenuLinkClicked = function() {
-  if (mobileMenu && !mobileMenu.classList.contains("hidden")) {
-    mobileMenu.classList.add("hidden");
-  }
-};
+    if (mobileMenu) {
+      mobileMenu.classList.remove("show");
+      document.body.classList.remove("mobile-menu-open");
+      // Убираем класс hidden после окончания анимации
+      setTimeout(() => {
+        if (!mobileMenu.classList.contains("show")) {
+          mobileMenu.classList.add("hidden");
+        }
+      }, 300);
+    }
+  };
 
 // Если экран меньше или равен 768px – мобильное устройство:
   if (window.innerWidth <= 768) {
     document.getElementById("artist-input-top").placeholder = "Enter artist name";
   }
-  // Функция для закрытия мобильного меню при клике по ссылке
-  window.mobileMenuLinkClicked = function() {
-    if (mobileMenu && !mobileMenu.classList.contains("hidden")) {
-      mobileMenu.classList.add("hidden");
-    }
-  };
 
   // Закрытие мобильного меню при клике вне него
   document.addEventListener("click", (e) => {
     if (mobileMenu && !e.target.closest("#mobile-menu") && !e.target.closest("#menu-toggle")) {
-      if (!mobileMenu.classList.contains("hidden")) {
-        mobileMenu.classList.add("hidden");
+      if (mobileMenu.classList.contains("show")) {
+        mobileMenu.classList.remove("show");
+        document.body.classList.remove("mobile-menu-open");
+        // Убираем класс hidden после окончания анимации
+        setTimeout(() => {
+          if (!mobileMenu.classList.contains("show")) {
+            mobileMenu.classList.add("hidden");
+          }
+        }, 300);
       }
     }
   });
@@ -167,7 +239,13 @@ const lookForCheckboxes = document.querySelectorAll(".look-for");
 lookForCheckboxes.forEach(cb => {
   cb.addEventListener("change", function() {
     updateLookForSettings();
-    applySettings(); // применяем фильтр сразу
+    // Если уже выбран исполнитель, выполняем повторную загрузку дискографии с новыми типами
+    if (selectedArtistId) {
+      const releaseTypes = window.settings.types.length > 0 ? window.settings.types.join(",") : "album";
+      loadDiscography(selectedArtistId, releaseTypes);
+    } else {
+      applySettings(); // применяем фильтр сразу, если данные уже загружены
+    }
   });
 });
 
@@ -286,9 +364,19 @@ async function searchArtist() {
     selectedArtistName = artist.name;
     updateArtistImage(artist.id);
     dropdown.classList.add("hidden");
-    // Сбрасываем настройки к значениям по умолчанию при выборе нового исполнителя
-    resetSettingsToDefault();
-    loadDiscography(artist.id);
+    // Обновляем поле поиска и показываем крестик
+    const searchInput = document.getElementById("artist-input-top");
+    searchInput.value = artist.name;
+    const clearSearchBtn = document.getElementById("clear-search");
+    if (clearSearchBtn && searchInput.value.trim().length > 0) {
+      clearSearchBtn.style.display = "block";
+      clearSearchBtn.style.opacity = "1";
+    }
+    // Сохраняем текущие настройки из чекбоксов перед загрузкой нового исполнителя
+    saveCurrentSettings();
+    // Используем сохраненные настройки для загрузки дискографии
+    const releaseTypes = window.settings.types.length > 0 ? window.settings.types.join(",") : "album";
+    loadDiscography(artist.id, releaseTypes);
   });
 
   dropdown.appendChild(li);
@@ -349,40 +437,27 @@ async function loadDiscography(artist_id, releaseTypes = "album") {
   showLoading(false);
 
   discographyData = data;
- updateArtistImage(selectedArtistId);
+  updateArtistImage(selectedArtistId);
 
+  // Очищаем выбранный альбом и график треков при загрузке новой дискографии
   selectedAlbum = null;
+  document.getElementById("track-chart").innerHTML = "";
+  
   const albumList = document.getElementById("album-list");
   albumList.innerHTML = "";
 
-  data.albums.forEach(album => {
-    const li = document.createElement("li");
-    li.textContent = `${album.name} (${album.release_year}) [pop: ${album.popularity}]`;
-    li.addEventListener("click", () => {
-      let albumForDisplay = Object.assign({}, album);
-      if (albumForDisplay.tracks && window.settings.filters && window.settings.filters.length > 0) {
-        albumForDisplay.tracks = albumForDisplay.tracks.filter(track => {
-          return !window.settings.filters.some(filterWord => track.name.toLowerCase().includes(filterWord.toLowerCase()));
-        });
-      }
-      if (albumForDisplay.tracks.length > 0) {
-        drawTrackChart(albumForDisplay);
-      } else {
-        document.getElementById("track-chart").innerHTML = "";
-      }
-      selectedAlbum = albumForDisplay;
-    });
-    albumList.appendChild(li);
-  });
-
-  drawAlbumChart(data.albums);
+  // После загрузки данных применяем настройки (фильтры)
+  applySettings();
 }
 
 
 function drawAlbumChart(albums) {
   // 1) Определяем префикс по window.settings.types
   let prefix;
-  const types = window.settings.types; // ["album"], ["single"], ["album","single"], …
+  // Если types пуст, используем ["album"] по умолчанию
+  const types = (window.settings.types && window.settings.types.length > 0) 
+    ? window.settings.types 
+    : ["album"];
   if (types.includes("album") && types.includes("single")) {
     prefix = "Discography Popularity";
   } else if (types.includes("single")) {
@@ -400,8 +475,30 @@ function drawAlbumChart(albums) {
   const sorted = albums.slice().sort((a, b) => b.popularity - a.popularity);
   const names = sorted.map(a => `${a.name} (${a.release_year})`);
   const pops  = sorted.map(a => a.popularity);
+  const shortNames = sorted.map(a => a.name); // Короткие имена для аннотаций
 
-  const darkTheme = {
+  // Определяем, является ли устройство мобильным
+  const isMobile = window.innerWidth <= 768;
+
+  // Настройки для мобильных и десктопных устройств
+  const config = isMobile ? {
+    paper_bgcolor: "#222222",
+    plot_bgcolor:  "#222222",
+    font: { color: "#FFFFFF" },
+    xaxis: {
+      gridcolor: "#333333",
+      tickfont: { color: "#FFFFFF", size: 10 },
+      title: { text: "Popularity", font: { color: "#FFFFFF", size: 11 } }
+    },
+    yaxis: {
+      gridcolor: "#333333",
+      tickfont: { color: "#FFFFFF", size: 8 },
+      autorange: "reversed",
+      showticklabels: false // Скрываем подписи на оси Y для мобильных
+    },
+    margin: { t: 40, l: 5, r: 5, b: 40 },
+    showlegend: false
+  } : {
     paper_bgcolor: "#222222",
     plot_bgcolor:  "#222222",
     font: { color: "#FFFFFF" },
@@ -418,11 +515,38 @@ function drawAlbumChart(albums) {
     margin: { t: 50, l: 300 }
   };
 
+  // Для мобильных используем индексы вместо названий на оси Y
+  const yLabels = isMobile ? sorted.map((_, i) => i + 1) : names;
+  
+  // Формируем текстовые метки для мобильных
+  const textLabels = isMobile ? shortNames.map((n, i) => {
+    const maxLen = window.innerWidth <= 400 ? 18 : 25;
+    const truncated = n.length > maxLen ? n.substring(0, maxLen - 3) + '...' : n;
+    return `${truncated} (${sorted[i].release_year})`;
+  }) : null;
+  
+  const trace = {
+    type: "bar", 
+    x: pops, 
+    y: yLabels, 
+    orientation: "h", 
+    marker: { color: "#1DB954" },
+    text: isMobile ? textLabels : names,
+    textposition: isMobile ? "outside" : "none",
+    textfont: { color: "#FFFFFF", size: isMobile ? 9 : 12 },
+    textangle: 0,
+    insidetextanchor: "middle",
+    hovertemplate: isMobile 
+      ? '<b>%{text}</b><br>Popularity: %{x}<extra></extra>' 
+      : '<b>%{y}</b><br>Popularity: %{x}<extra></extra>',
+    hoverlabel: { bgcolor: "rgba(0,0,0,0.8)", font: { color: "#FFFFFF", size: 12 } }
+  };
+
   Plotly.newPlot(
     "album-chart",
-    [{ type: "bar", x: pops, y: names, orientation: "h", marker: { color: "#1DB954" } }],
-    Object.assign({ title: titleText }, darkTheme),
-    { responsive: true }
+    [trace],
+    Object.assign({ title: { text: titleText, font: { size: isMobile ? 14 : 16 } } }, config),
+    { responsive: true, displayModeBar: false }
   );
 }
 
@@ -435,11 +559,30 @@ function drawTrackChart(album) {
   const names = tracks.map(t => t.name);
   const pops = tracks.map(t => t.popularity);
 
-  // Тема графика, аналогичная предыдущей, для тёмного оформления:
-  const darkTheme = {
-    // Измените здесь фон (фон графика чуть светлее)
-    paper_bgcolor: "#222222", // Фон всей области графика
-    plot_bgcolor: "#222222",  // Фон области рисования графика
+  // Определяем, является ли устройство мобильным
+  const isMobile = window.innerWidth <= 768;
+
+  // Настройки для мобильных и десктопных устройств
+  const config = isMobile ? {
+    paper_bgcolor: "#222222",
+    plot_bgcolor:  "#222222",
+    font: { color: "#FFFFFF" },
+    xaxis: {
+      gridcolor: "#333333",
+      tickfont: { color: "#FFFFFF", size: 10 },
+      title: { text: "Popularity", font: { color: "#FFFFFF", size: 11 } }
+    },
+    yaxis: {
+      gridcolor: "#333333",
+      tickfont: { color: "#FFFFFF", size: 8 },
+      autorange: "reversed",
+      showticklabels: false // Скрываем подписи на оси Y для мобильных
+    },
+    margin: { t: 40, l: 5, r: 5, b: 40 },
+    showlegend: false
+  } : {
+    paper_bgcolor: "#222222",
+    plot_bgcolor:  "#222222",
     font: { color: "#FFFFFF" },
     xaxis: {
       gridcolor: "#333333",
@@ -449,20 +592,40 @@ function drawTrackChart(album) {
     yaxis: {
       gridcolor: "#333333",
       tickfont: { color: "#FFFFFF", size: 12 },
-      autorange: "reversed" // Обеспечивает, что самый популярный трек окажется сверху
+      autorange: "reversed"
     },
     margin: { t: 50, l: 300 }
   };
 
-  Plotly.newPlot("track-chart", [{
+  // Для мобильных используем индексы вместо названий на оси Y
+  const yLabels = isMobile ? tracks.map((_, i) => i + 1) : names;
+  
+  // Формируем текстовые метки для мобильных
+  const textLabels = isMobile ? names.map((n, i) => {
+    const maxLen = window.innerWidth <= 400 ? 18 : 25;
+    return n.length > maxLen ? n.substring(0, maxLen - 3) + '...' : n;
+  }) : null;
+  
+  const trace = {
     type: "bar",
     x: pops,
-    y: names,
+    y: yLabels,
     orientation: "h",
-    marker: { color: "orange" }
-  }], Object.assign({
-    title: `Tracks in ${album.name}`
-  }, darkTheme), { responsive: true });
+    marker: { color: "orange" },
+    text: isMobile ? textLabels : names,
+    textposition: isMobile ? "outside" : "none",
+    textfont: { color: "#FFFFFF", size: isMobile ? 9 : 12 },
+    textangle: 0,
+    insidetextanchor: "middle",
+    hovertemplate: isMobile 
+      ? '<b>%{text}</b><br>Popularity: %{x}<extra></extra>' 
+      : '<b>%{y}</b><br>Popularity: %{x}<extra></extra>',
+    hoverlabel: { bgcolor: "rgba(0,0,0,0.8)", font: { color: "#FFFFFF", size: 12 } }
+  };
+
+  Plotly.newPlot("track-chart", [trace], Object.assign({
+    title: { text: `Tracks in ${album.name}`, font: { size: isMobile ? 14 : 16 } }
+  }, config), { responsive: true, displayModeBar: false });
 }
 
 
@@ -698,9 +861,14 @@ function showAbout() {
 function getFilteredAlbums() {
   if (!discographyData || !discographyData.albums) return [];
 
+  // Если types пуст, используем ["album"] по умолчанию
+  const typesToFilter = window.settings.types && window.settings.types.length > 0 
+    ? window.settings.types 
+    : ["album"];
+
   // типы (album/single)
   let albums = discographyData.albums.filter(a => {
-    return a.album_type ? window.settings.types.includes(a.album_type.toLowerCase()) : true;
+    return a.album_type ? typesToFilter.includes(a.album_type.toLowerCase()) : true;
   });
 
   // фильтры по словам
@@ -797,10 +965,15 @@ function closeSettings() {
 function applySettings() {
   if (!discographyData) return;
 
+  // Если types пуст, используем ["album"] по умолчанию
+  const typesToFilter = window.settings.types && window.settings.types.length > 0 
+    ? window.settings.types 
+    : ["album"];
+
   // Фильтруем альбомы по типу
   let filteredAlbums = discographyData.albums.filter(album => {
     if (album.album_type) {
-      return window.settings.types.includes(album.album_type.toLowerCase());
+      return typesToFilter.includes(album.album_type.toLowerCase());
     }
     return true;
   });
@@ -813,10 +986,13 @@ function applySettings() {
     });
   }
 
+  // Сортируем отфильтрованные альбомы по популярности (по убыванию)
+  const sortedFilteredAlbums = filteredAlbums.slice().sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
+
   // Обновляем HTML‑список альбомов
   const albumList = document.getElementById("album-list");
   albumList.innerHTML = "";
-  filteredAlbums.forEach(album => {
+  sortedFilteredAlbums.forEach(album => {
     const li = document.createElement("li");
     li.textContent = `${album.name} (${album.release_year}) [pop: ${album.popularity}]`;
     li.addEventListener("click", () => {
@@ -836,8 +1012,8 @@ function applySettings() {
     albumList.appendChild(li);
   });
 
-  // Обновляем график альбомов
-  drawAlbumChart(filteredAlbums);
+  // Обновляем график альбомов (используем отсортированные альбомы для графика)
+  drawAlbumChart(sortedFilteredAlbums);
   // синхронизируем панель экспорта
   updateExportControls();
 
@@ -845,7 +1021,7 @@ function applySettings() {
   if (selectedAlbum) {
     // Если выбранный альбом уже не входит в отфильтрованные альбомы,
     // очищаем контейнер графика треков и сбрасываем selectedAlbum.
-    if (!filteredAlbums.some(album => album.id === selectedAlbum.id)) {
+    if (!sortedFilteredAlbums.some(album => album.id === selectedAlbum.id)) {
       selectedAlbum = null;
       document.getElementById("track-chart").innerHTML = "";
     } else {
@@ -924,8 +1100,37 @@ function exportToCsv() {
     "Release Type","Release Name","Release Date","Release ID","Popularity Score"
   ];
 
-  // Если выбран альбом — добавим трековые колонки
-  const addTracks = !!(selectedAlbum && selectedAlbum.tracks && selectedAlbum.tracks.length > 0);
+  // Проверяем, есть ли выбранный альбом и он находится в отфильтрованных альбомах
+  // Также убеждаемся, что selectedAlbum относится к текущей дискографии
+  let currentSelectedAlbum = null;
+  if (selectedAlbum && selectedAlbum.id && discographyData) {
+    // Сначала ищем альбом в отфильтрованных альбомах по ID
+    currentSelectedAlbum = albums.find(a => a.id === selectedAlbum.id);
+    
+    // Если найден в отфильтрованных - используем его (он уже отфильтрован)
+    // Если не найден, ищем в исходных данных и применяем фильтры
+    if (!currentSelectedAlbum && discographyData.albums) {
+      const originalAlbum = discographyData.albums.find(a => a.id === selectedAlbum.id);
+      if (originalAlbum) {
+        // Применяем фильтры к трекам
+        let albumForExport = Object.assign({}, originalAlbum);
+        if (albumForExport.tracks && window.settings.filters && window.settings.filters.length > 0) {
+          albumForExport.tracks = albumForExport.tracks.filter(track => {
+            return !window.settings.filters.some(filterWord => track.name.toLowerCase().includes(filterWord.toLowerCase()));
+          });
+        }
+        // Проверяем, проходит ли альбом через фильтры типов и названий (как в getFilteredAlbums)
+        const passesTypeFilter = !albumForExport.album_type || window.settings.types.includes(albumForExport.album_type.toLowerCase());
+        const passesNameFilter = !window.settings.filters || window.settings.filters.length === 0 || 
+          !window.settings.filters.some(f => albumForExport.name.toLowerCase().includes(f.toLowerCase()));
+        if (passesTypeFilter && passesNameFilter && albumForExport.tracks && albumForExport.tracks.length > 0) {
+          currentSelectedAlbum = albumForExport;
+        }
+      }
+    }
+  }
+
+  const addTracks = !!(currentSelectedAlbum && currentSelectedAlbum.tracks && currentSelectedAlbum.tracks.length > 0);
   const trackHeaders = addTracks ? ["Selected Release","Track","Track ID","Track Score"] : [];
   const headers = baseHeaders.concat(trackHeaders);
 
@@ -949,18 +1154,18 @@ function exportToCsv() {
   });
 
   // если выбранный релиз есть — добавим строки по его трекам
-  if (addTracks) {
-    const albumName = selectedAlbum.name;
-    (selectedAlbum.tracks || []).forEach(t => {
+  if (addTracks && currentSelectedAlbum) {
+    const albumName = currentSelectedAlbum.name;
+    (currentSelectedAlbum.tracks || []).forEach(t => {
       rows.push([
         artistName,
         followers,
         genres,
-        selectedAlbum.album_type || "album",
-        selectedAlbum.name || "",
-        selectedAlbum.release_date || "",
-        selectedAlbum.id || "",
-        selectedAlbum.popularity ?? "",
+        currentSelectedAlbum.album_type || "album",
+        currentSelectedAlbum.name || "",
+        currentSelectedAlbum.release_date || "",
+        currentSelectedAlbum.id || "",
+        currentSelectedAlbum.popularity ?? "",
         albumName || "",
         t.name || "",
         t.id || "",
@@ -1036,38 +1241,32 @@ function goToMain() {
 }
 
 
-// Функция сброса настроек к значениям по умолчанию
-function resetSettingsToDefault() {
-  // Сброс объекта настроек
-  window.settings.types = ["album"];
-  window.settings.filters = [];
-
- // Обработчики для чекбоксов "To Look For"
-const lookForCheckboxes = document.querySelectorAll(".look-for");
-lookForCheckboxes.forEach(cb => {
-  cb.addEventListener("change", function() {
-    updateLookForSettings();
-    // Если уже выбран исполнитель, выполняем повторную загрузку дискографии
-    if (selectedArtistId) {
-      // Собираем значение для параметра release_types, например, "album" или "album,single"
-      const releaseTypes = window.settings.types.join(",");
-      loadDiscography(selectedArtistId, releaseTypes);
-    }
+// Функция синхронизации чекбоксов с текущими настройками
+function syncCheckboxesWithSettings() {
+  // Синхронизируем чекбоксы "To Look For" с window.settings.types
+  const lookForCheckboxes = document.querySelectorAll(".look-for");
+  lookForCheckboxes.forEach(cb => {
+    cb.checked = window.settings.types.includes(cb.value);
   });
-});
 
-
-  // Сброс чекбоксов "To Filter Out" (по умолчанию ни один не выбран)
+  // Синхронизируем чекбоксы "To Filter Out" с window.settings.filters
   const filterCheckboxes = document.querySelectorAll(".filter-key");
   filterCheckboxes.forEach(cb => {
-    cb.checked = false;
+    cb.checked = window.settings.filters.includes(cb.value);
   });
 
-  // Сбрасываем чекбокс "Select All"
+  // Синхронизируем чекбокс "Select All"
   const selectAll = document.getElementById("select-all-filters");
-  if (selectAll) {
-    selectAll.checked = false;
+  if (selectAll && filterCheckboxes.length > 0) {
+    const allChecked = Array.from(filterCheckboxes).every(chk => chk.checked);
+    selectAll.checked = allChecked;
   }
+}
+
+// Функция сохранения текущих настроек из чекбоксов
+function saveCurrentSettings() {
+  updateLookForSettings();
+  updateFilterSettings();
 }
 
 // Функция дебаунса
@@ -1279,7 +1478,14 @@ document.getElementById("artist-input-top").addEventListener("keydown", function
 function selectArtist(artist) {
   selectedArtistId = artist.id;
   selectedArtistName = artist.name;
-  document.getElementById("artist-input-top").value = artist.name;
+  const searchInput = document.getElementById("artist-input-top");
+  searchInput.value = artist.name;
+  // Показываем крестик, так как поле заполнено
+  const clearSearchBtn = document.getElementById("clear-search");
+  if (clearSearchBtn && searchInput.value.trim().length > 0) {
+    clearSearchBtn.style.display = "block";
+    clearSearchBtn.style.opacity = "1";
+  }
 
   // 1) сразу показываем превью из поиска (мгновенно)
   if (artist.image) setArtistImageUrl(artist.image);
@@ -1303,10 +1509,31 @@ function selectArtist(artist) {
   dropdown.innerHTML = "";
   dropdownSelectedIndex = -1;
 
-  resetSettingsToDefault();
-  loadDiscography(artist.id);   // пусть грузится в фоне
+  // Сохраняем текущие настройки из чекбоксов перед загрузкой нового исполнителя
+  saveCurrentSettings();
+  // Используем сохраненные настройки для загрузки дискографии
+  const releaseTypes = window.settings.types.length > 0 ? window.settings.types.join(",") : "album";
+  loadDiscography(artist.id, releaseTypes);   // пусть грузится в фоне
   goToMain();
 }
+
+// Обработчик изменения размера окна для перерисовки графиков
+let resizeTimeout;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimeout);
+  resizeTimeout = setTimeout(() => {
+    // Перерисовываем графики при изменении размера окна
+    if (discographyData && discographyData.albums) {
+      const filteredAlbums = getFilteredAlbums();
+      if (filteredAlbums.length > 0) {
+        drawAlbumChart(filteredAlbums);
+      }
+    }
+    if (selectedAlbum && selectedAlbum.tracks && selectedAlbum.tracks.length > 0) {
+      drawTrackChart(selectedAlbum);
+    }
+  }, 250); // Дебаунс 250мс
+});
 
 
 
